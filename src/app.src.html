@@ -1,0 +1,1336 @@
+<style>
+/* Layout concept: a library rail on the left, one tall "page" sheet in the middle that you read along with,
+   and a transport dock under it. Colour comes from a palette (set on <html data-palette>) in light or dark. */
+/*__PALETTES__*/
+:root {
+  --shadow: 0 1px 2px rgba(10,20,25,.08), 0 14px 34px -16px rgba(10,20,25,.28);
+  --danger: #A12A2A;
+  --f-ui: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-read: "Tiro Devanagari Hindi", "Noto Serif Devanagari", "Mangal", "Kohinoor Devanagari", serif;
+  --read-size: 1.4rem;
+}
+:root[data-theme="dark"] { --shadow: 0 1px 2px rgba(0,0,0,.5), 0 14px 34px -16px rgba(0,0,0,.7); --danger: #F08A8A; }
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--f-ui); font-size: 15px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 12px;
+  overflow: hidden;
+}
+button, select, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+.app { height: 100%; display: grid; grid-template-columns: 276px minmax(0, 1fr); gap: 20px; }
+
+/* ---------- rail ---------- */
+.rail { display: flex; flex-direction: column; gap: 18px; min-height: 0; padding: 4px 4px 0 0; }
+.brand { display: flex; align-items: baseline; gap: 10px; padding: 2px 2px 0; margin: 0; font-weight: inherit; font-size: inherit; }
+.brand-mark { font-family: var(--f-read); font-size: 2.2rem; line-height: 1; letter-spacing: .01em; color: var(--accent); }
+.brand-sub { font-size: .78rem; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--line); background: var(--panel); border-radius: 10px; padding: 9px 14px; font-weight: 600; transition: background .15s, border-color .15s, transform .1s; }
+.btn:hover { border-color: var(--ink-3); }
+.btn:active { transform: translateY(1px); }
+.btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: var(--accent-ink); border-color: var(--accent); box-shadow: 0 6px 16px -8px var(--accent); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.quiet { background: transparent; border-color: transparent; color: var(--ink-2); padding: 7px 9px; }
+.btn.quiet:hover { background: var(--panel); border-color: var(--line); }
+.drop { margin: 0; }
+.drop .btn { width: 100%; padding: 12px 14px; }
+.drop small { display: block; margin-top: 7px; color: var(--ink-3); font-size: .8rem; }
+.sr:focus { position: fixed; left: 12px; top: 12px; width: auto; height: auto; clip: auto; z-index: 100; background: var(--accent); color: var(--accent-ink); padding: 8px 14px; border-radius: 8px; font-weight: 600; }
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+.swatch { text-align: left; border: 2px solid var(--line); background: var(--sheet); border-radius: 12px; padding: 8px; display: grid; gap: 6px; }
+.swatch:hover { border-color: var(--ink-3); }
+.swatch[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.swatch .prev { display: grid; grid-template-columns: 1.6fr 1fr 1fr; height: 30px; border-radius: 7px; overflow: hidden; border: 1px solid rgba(128,128,128,.35); }
+.swatch b { font-size: .88rem; } .swatch span.d { font-size: .74rem; color: var(--ink-3); line-height: 1.25; }
+.meter { height: 6px; border-radius: 6px; background: var(--line); overflow: hidden; margin-top: 8px; } .meter i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .2s; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+body.dragging .sheet { outline: 2px dashed var(--accent); outline-offset: -8px; }
+
+.sec-label { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; color: var(--ink-3); margin: 0 0 8px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.doc-title { font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
+.doc-meta { color: var(--ink-3); font-size: .85rem; margin-top: 3px; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.chip { font-size: .76rem; font-weight: 600; border-radius: 99px; padding: 3px 9px; background: var(--accent-soft); color: var(--accent); }
+.chip.off { background: transparent; border: 1px solid var(--line); color: var(--ink-3); }
+.lib { display: grid; gap: 6px; }
+.lib button { text-align: left; display: grid; gap: 1px; padding: 9px 12px; background: transparent; border: 1px solid transparent; border-radius: 10px; }
+.lib button:hover { background: var(--panel); border-color: var(--line); }
+.lib button b { font-weight: 600; }
+.lib button span { color: var(--ink-3); font-size: .82rem; }
+.toc-wrap { min-height: 0; display: flex; flex-direction: column; flex: 1; }
+.toc { overflow: auto; margin: 0 -6px 0 -4px; padding: 0 6px 12px 4px; display: grid; gap: 1px; align-content: start; }
+.toc button { text-align: left; background: transparent; border: 0; border-radius: 8px; padding: 7px 10px; color: var(--ink-2); display: flex; gap: 10px; align-items: baseline; }
+.toc button:hover { background: var(--panel); }
+.toc button[aria-current="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.toc button[aria-current="true"] .e { color: var(--ink-2); }
+.toc .n { font-variant-numeric: tabular-nums; min-width: 1.6em; color: var(--ink-3); font-size: .85rem; }
+.toc .t { font-family: var(--f-read); font-size: 1.02rem; line-height: 1.35; }
+.toc .t.lat { font-family: var(--f-ui); font-size: .92rem; }
+.toc .e { display: block; font-family: var(--f-ui); font-size: .76rem; color: var(--ink-3); }
+
+/* ---------- main ---------- */
+.main { display: flex; flex-direction: column; gap: 12px; min-width: 0; min-height: 0; }
+.topbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.menu-btn { display: none; }
+.tabs { display: inline-flex; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
+.tabs button { border: 0; background: transparent; padding: 6px 13px; border-radius: 7px; font-weight: 600; color: var(--ink-2); }
+.tabs button[aria-selected="true"] { background: var(--sheet); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.spacer { flex: 1; }
+.pager { display: inline-flex; align-items: center; gap: 4px; }
+.pager input { width: 4.4em; text-align: center; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 4px; font-variant-numeric: tabular-nums; }
+.pager .tot { color: var(--ink-3); font-variant-numeric: tabular-nums; min-width: 3.2em; }
+.icon-btn { display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: 9px; border: 1px solid transparent; background: transparent; color: var(--ink-2); }
+.icon-btn:hover { background: var(--panel); border-color: var(--line); }
+.icon-btn:disabled { opacity: .35; cursor: default; }
+
+.sheet { position: relative; flex: 1; min-height: 0; background: radial-gradient(120% 55% at 50% 0%, color-mix(in srgb, var(--accent-soft) 70%, var(--sheet)) 0%, var(--sheet) 62%); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column; }
+.stage { flex: 1; overflow: auto; scroll-behavior: auto; padding: 28px clamp(18px, 4vw, 56px) 60px; }
+.reading { max-width: 40rem; margin: 0 auto; font-family: var(--f-read); font-size: var(--read-size); line-height: 2; color: var(--ink); }
+.reading p { margin: 0 0 1.05em; text-wrap: pretty; }
+.u { cursor: pointer; border-radius: 4px; padding: 1px 0; -webkit-box-decoration-break: clone; box-decoration-break: clone; transition: background .18s; }
+.u:hover { background: var(--accent-soft); }
+.u.on { background: var(--mark); color: var(--mark-ink); }
+.u.silent { cursor: default; color: var(--ink-3); }
+.chapter-head { text-align: center; margin: 0 0 1.4em; }
+.chapter-head .kicker { font-family: var(--f-ui); font-size: .76rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; }
+.chapter-head h2 { font-weight: 400; font-size: 1.9em; line-height: 1.25; margin: .15em 0 0; }
+.chapter-head .sub { font-family: var(--f-ui); color: var(--ink-3); font-size: .9rem; margin-top: 4px; }
+.verse { display: grid; grid-template-columns: 3.1rem minmax(0, 1fr); gap: 4px 6px; padding: 8px 0; border-top: 1px solid var(--line); }
+.verse:first-of-type { border-top: 0; }
+.verse .no { font-family: var(--f-ui); font-variant-numeric: tabular-nums; font-size: .78rem; font-weight: 700; color: var(--ink-3); padding-top: .85em; }
+.verse .tx { line-height: 1.95; white-space: pre-line; }
+.notice { max-width: 34rem; margin: 40px auto; text-align: center; color: var(--ink-2); font-family: var(--f-ui); }
+.notice h3 { margin: 0 0 6px; font-size: 1.1rem; color: var(--ink); }
+.page-wrap { position: relative; margin: 0 auto; width: max-content; max-width: 100%; box-shadow: 0 0 0 1px var(--line), var(--shadow); background: #fff; }
+.page-wrap canvas { display: block; max-width: 100%; }
+.page-wrap .ov { position: absolute; border-radius: 3px; cursor: pointer; }
+.page-wrap .ov:hover { background: rgba(20,96,107,.18); }
+.page-wrap .ov.on { background: rgba(245,196,60,.5); mix-blend-mode: multiply; }
+.loading { position: absolute; inset: 0; display: grid; place-items: center; background: color-mix(in srgb, var(--sheet) 82%, transparent); font-weight: 600; color: var(--ink-2); z-index: 3; }
+.loading[hidden] { display: none !important; }
+.bar { width: 190px; height: 4px; border-radius: 4px; background: var(--line); margin-top: 10px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+
+/* ---------- dock ---------- */
+.dock { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 10px 14px 12px; display: grid; gap: 8px; box-shadow: var(--shadow); margin-bottom: env(safe-area-inset-bottom, 0px); }
+.seek { width: 100%; accent-color: var(--accent); height: 18px; margin: 0; }
+.dock-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.transport { display: inline-flex; align-items: center; gap: 6px; }
+.play { width: 56px; height: 56px; border-radius: 50%; border: 0; background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 8px 20px -8px var(--accent); color: var(--accent-ink); display: grid; place-items: center; transition: transform .1s, filter .15s; }
+.play:hover { filter: brightness(1.1); }
+.play:active { transform: scale(.96); }
+.play svg { width: 24px; height: 24px; fill: currentColor; stroke: none; }
+.now { min-width: 0; flex: 1 1 200px; }
+.now .l1 { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.now .l2 { color: var(--ink-3); font-size: .84rem; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.field { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-3); font-size: .82rem; font-weight: 600; }
+.field select, .select { background: var(--sheet); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; color: var(--ink); max-width: 100%; }
+.toggle { display: inline-flex; align-items: center; gap: 7px; font-size: .86rem; color: var(--ink-2); cursor: pointer; user-select: none; }
+.toggle input { accent-color: var(--accent); width: 16px; height: 16px; }
+
+/* ---------- settings sheet ---------- */
+.scrim { position: fixed; inset: 0; background: rgba(8,14,17,.5); z-index: 40; display: none; }
+.scrim.open { display: block; }
+.panel { position: fixed; top: 0; right: 0; bottom: 0; width: min(440px, 100vw); background: var(--panel); border-left: 1px solid var(--line); z-index: 60; transform: translateX(105%); visibility: hidden; transition: transform .22s ease, visibility 0s .22s; display: flex; flex-direction: column; padding-top: env(safe-area-inset-top, 0px); }
+.panel.open { transform: none; visibility: visible; transition-delay: 0s; }
+.panel header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px 12px max(18px, env(safe-area-inset-left, 0px)); border-bottom: 1px solid var(--line); }
+.panel h2 { margin: 0; font-size: 1.05rem; }
+.panel .body { overflow: auto; padding: 8px max(18px, env(safe-area-inset-right, 0px)) 28px 18px; display: grid; gap: 22px; align-content: start; }
+.group { display: grid; gap: 12px; padding-top: 14px; }
+.group h3 { margin: 0; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.row { display: grid; gap: 5px; }
+.row label, .row .lab { font-weight: 600; font-size: .9rem; }
+.row .hint { color: var(--ink-3); font-size: .82rem; line-height: 1.4; }
+.row .select, .row input[type="text"], .row input[type="password"], .row textarea { width: 100%; background: var(--sheet); border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; }
+.row input[type="range"] { width: 100%; accent-color: var(--accent); }
+.row .val { float: right; color: var(--ink-3); font-variant-numeric: tabular-nums; font-weight: 500; }
+.seg { display: inline-flex; background: var(--sheet); border: 1px solid var(--line); border-radius: 9px; padding: 2px; flex-wrap: wrap; }
+.seg button { border: 0; background: transparent; padding: 5px 11px; border-radius: 7px; color: var(--ink-2); font-weight: 600; font-size: .86rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.paste-box textarea { min-height: 220px; font-family: var(--f-read); font-size: 1.15rem; line-height: 1.8; resize: vertical; }
+
+.toast { position: fixed; left: 50%; bottom: calc(110px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 12px); background: var(--ink); color: var(--bg); padding: 9px 16px; border-radius: 10px; font-weight: 600; font-size: .9rem; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 60; max-width: min(92vw, 520px); text-align: center; }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- narrow ---------- */
+.grab { display: none; width: 40px; height: 5px; border-radius: 3px; background: var(--ink-3); opacity: .5; margin: 8px auto 6px; flex: none; touch-action: none; cursor: grab; position: relative; }
+.grab::before { content: ""; position: absolute; inset: -12px -20px; }
+.tabbar { display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; justify-content: space-around; gap: 4px; padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); background: color-mix(in srgb, var(--panel) 90%, transparent); -webkit-backdrop-filter: blur(18px) saturate(1.5); backdrop-filter: blur(18px) saturate(1.5); border-top: 1px solid var(--line); }
+.tabbar button { flex: 1; background: none; border: 0; display: grid; justify-items: center; align-content: center; gap: 3px; color: var(--ink-2); font-size: .72rem; font-weight: 600; min-height: 52px; padding: 2px; border-radius: 12px; }
+.tabbar .ind { display: grid; place-items: center; width: 56px; height: 30px; border-radius: 15px; transition: background .2s; }
+.tabbar button[aria-current="page"] { color: var(--accent); }
+@media (max-width: 860px) {
+  body { padding-top: 8px; padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px)); }
+  .app { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .menu-btn, #modeBtn, #setBtn { display: none; }
+  .tabbar { display: flex; }
+  .grab { display: block; }
+  .rail { position: fixed; z-index: 55; left: 0; right: 0; bottom: 0; top: auto; width: 100%; max-height: 88dvh; max-height: 88vh; background: var(--panel); border: 1px solid var(--line); border-bottom: 0; border-radius: var(--r-sheet) var(--r-sheet) 0 0; padding: 0 max(16px, env(safe-area-inset-right, 0px)) calc(18px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); gap: 14px; overflow: auto; transform: translateY(105%); visibility: hidden; transition: transform .28s cubic-bezier(.2,.8,.2,1), visibility 0s .28s; box-shadow: 0 -16px 44px -14px rgba(0,0,0,.45); }
+  .rail.open { transform: none; visibility: visible; transition-delay: 0s; }
+  .rail .toc-wrap { flex: none; } .toc { max-height: 36vh; }
+  .panel { top: auto; left: 0; right: 0; width: 100%; max-height: 92dvh; max-height: 92vh; border: 1px solid var(--line); border-bottom: 0; border-radius: var(--r-sheet) var(--r-sheet) 0 0; transform: translateY(105%); padding-top: 0; box-shadow: 0 -16px 44px -14px rgba(0,0,0,.45); }
+  .panel.open { transform: none; }
+  .panel header { padding-top: 4px; }
+  .stage { padding: 18px 16px 40px; }
+  .reading { --read-size: 1.28rem; }
+  .dock { margin-bottom: 8px; padding: 8px 12px 10px; }
+  .dock-row { gap: 8px 12px; }
+  .now { flex: 1 1 100%; order: -1; }
+  .field { margin-left: auto; } .field > span { display: none; }
+  .hide-sm { display: none; }
+  .topbar { gap: 8px; } .pager { margin-left: auto; }
+}
+@media (max-width: 860px) { .toast { bottom: auto; top: calc(10px + env(safe-area-inset-top, 0px)); transform: translate(-50%, -12px); } .toast.show { transform: translate(-50%, 0); } }
+@supports (height: 100dvh) { html, body { height: 100dvh; } }
+/* ---- platform flavours: the same app, shaped like the system it runs on ---- */
+:root { --r-ctl: 10px; --r-card: 12px; --r-sheet: 16px; }
+:root[data-platform="ios"] { --f-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif; --r-ctl: 12px; --r-card: 14px; --r-sheet: 16px; }
+:root[data-platform="mac"] { --f-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif; --r-ctl: 8px; --r-card: 12px; }
+:root[data-platform="windows"] { --f-ui: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; --r-ctl: 6px; --r-card: 8px; --r-sheet: 8px; }
+:root[data-platform="android"] { --f-ui: Roboto, "Google Sans", "Noto Sans", system-ui, sans-serif; --r-ctl: 20px; --r-card: 20px; --r-sheet: 28px; }
+.btn, .select, .field select, .pager input, .row input[type="text"], .row input[type="password"] { border-radius: var(--r-ctl); }
+.card, .dock, .swatch { border-radius: var(--r-card); }
+.toggle input[type="checkbox"] { flex: none; }
+:root[data-platform="ios"] .toggle input, :root[data-platform="android"] .toggle input { -webkit-appearance: none; appearance: none; position: relative; width: 51px; height: 31px; border-radius: 16px; background: var(--line); border: 2px solid var(--ink-3); transition: background .2s, border-color .2s; margin: 0; cursor: pointer; }
+:root[data-platform="ios"] .toggle input::after { content: ""; position: absolute; top: 1px; left: 1px; width: 25px; height: 25px; border-radius: 50%; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,.35); transition: transform .2s; }
+:root[data-platform="ios"] .toggle input:checked { background: var(--accent); border-color: var(--accent); }
+:root[data-platform="ios"] .toggle input:checked::after { transform: translateX(20px); }
+:root[data-platform="android"] .toggle input { width: 52px; height: 32px; background: transparent; }
+:root[data-platform="android"] .toggle input::after { content: ""; position: absolute; top: 6px; left: 6px; width: 16px; height: 16px; border-radius: 50%; background: var(--ink-3); transition: transform .2s, width .2s, height .2s, top .2s, left .2s, background .2s; }
+:root[data-platform="android"] .toggle input:checked { background: var(--accent); border-color: var(--accent); }
+:root[data-platform="android"] .toggle input:checked::after { width: 24px; height: 24px; top: 2px; left: 2px; transform: translateX(20px); background: var(--accent-ink); }
+/* iPhone and iPad */
+:root[data-platform="ios"] .btn { font-weight: 600; }
+:root[data-platform="ios"] .btn.primary { border-radius: 14px; box-shadow: none; }
+:root[data-platform="ios"] .seg, :root[data-platform="ios"] .tabs { background: color-mix(in srgb, var(--ink) 10%, var(--panel)); border: 0; border-radius: 9px; padding: 2px; }
+:root[data-platform="ios"] .seg button, :root[data-platform="ios"] .tabs button { border-radius: 7px; }
+:root[data-platform="ios"] .seg button[aria-pressed="true"] { background: var(--sheet); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.3), 0 0 0 .5px rgba(0,0,0,.1); }
+:root[data-platform="ios"] .tabbar { border-top-width: .5px; }
+:root[data-platform="ios"] .tabbar button { font-size: .66rem; gap: 1px; font-weight: 500; }
+:root[data-platform="ios"] .tabbar .ind { height: 28px; width: 44px; }
+:root[data-platform="ios"] .play { border-radius: 50%; box-shadow: none; }
+:root[data-platform="ios"] .panel h2 { font-size: 1.15rem; font-weight: 700; }
+:root[data-platform="ios"] .sheet { border-radius: 14px; box-shadow: none; }
+/* Android */
+:root[data-platform="android"] .btn { font-weight: 600; letter-spacing: .01em; }
+:root[data-platform="android"] .btn.primary { border-radius: 24px; box-shadow: 0 2px 6px rgba(0,0,0,.28); }
+:root[data-platform="android"] .play { border-radius: 20px; width: 60px; height: 60px; }
+:root[data-platform="android"] .seg, :root[data-platform="android"] .tabs { background: transparent; border: 1px solid var(--ink-3); border-radius: 20px; padding: 0; overflow: hidden; }
+:root[data-platform="android"] .seg button, :root[data-platform="android"] .tabs button { border-radius: 0; padding: 7px 14px; border-left: 1px solid var(--ink-3); }
+:root[data-platform="android"] .seg button:first-child, :root[data-platform="android"] .tabs button:first-child { border-left: 0; }
+:root[data-platform="android"] .seg button[aria-pressed="true"], :root[data-platform="android"] .tabs button[aria-selected="true"] { background: var(--accent-soft); color: var(--accent); box-shadow: none; }
+:root[data-platform="android"] .tabbar { background: var(--panel); -webkit-backdrop-filter: none; backdrop-filter: none; border-top: 0; box-shadow: 0 -1px 0 var(--line); }
+:root[data-platform="android"] .tabbar button { font-size: .74rem; }
+:root[data-platform="android"] .tabbar button[aria-current="page"] .ind { background: var(--accent-soft); }
+:root[data-platform="android"] .sheet { border-radius: 24px; }
+/* Windows and Mac keep the desktop layout with native type and calmer corners */
+:root[data-platform="windows"] .btn.primary, :root[data-platform="mac"] .btn.primary { box-shadow: none; }
+@media (pointer: coarse) {
+  .icon-btn { width: 44px; height: 44px; } .btn { min-height: 44px; } .seg button { min-height: 40px; padding-inline: 13px; }
+  .tabs button { min-height: 38px; } .toc button { padding-block: 10px; } .pager input { min-height: 40px; } .field select, .select { min-height: 40px; }
+}
+@media (prefers-contrast: more) { :root { --shadow: none; } .sheet, .dock, .card { border-width: 2px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6.5" y="5" width="4" height="14" rx="1.2"/><rect x="13.5" y="5" width="4" height="14" rx="1.2"/></symbol>
+  <symbol id="i-prev" viewBox="0 0 24 24"><path d="M7 5v14M18 6.5v11a.8.8 0 0 1-1.25.66L9.5 13.2a.8.8 0 0 1 0-1.32l7.25-4.4A.8.8 0 0 1 18 6.5Z"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="M17 5v14M6 6.5v11a.8.8 0 0 0 1.25.66l7.25-4.96a.8.8 0 0 0 0-1.32L7.25 5.84A.8.8 0 0 0 6 6.5Z"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="m14.5 6-6 6 6 6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="m9.5 6 6 6-6 6"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 14.5a1.6 1.6 0 0 0 .3 1.7l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.7-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.7.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.7 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.7.3h0a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.7-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.7v0a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1Z"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19h14"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5Z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></symbol>
+  <symbol id="i-books" viewBox="0 0 24 24"><path d="M5 4.5h4v15H5zM9.5 4.5h4v15h-4z"/><path d="m15 6.2 3.8-.9 3 13.5-3.8.9z"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M12 6.5C10 5 7 4.6 3.8 5.2v12.6C7 17.2 10 17.6 12 19.2c2-1.6 5-2 8.2-1.4V5.2C17 4.6 14 5 12 6.5ZM12 6.5v12.7"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h8.5M17 7h3M4 17h3M11.5 17H20"/><circle cx="14.8" cy="7" r="2.2"/><circle cx="9.2" cy="17" r="2.2"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+</svg>
+
+<a class="sr" href="#stage">Skip to the reader</a>
+<div class="app" id="app">
+  <aside class="rail" id="rail" aria-label="Library">
+    <span class="grab" id="grabRail" aria-hidden="true"></span>
+    <h1 class="brand"><span class="brand-mark" lang="hi">वाचक</span><span class="brand-sub">Vachak</span></h1>
+    <div class="drop">
+      <button class="btn primary" id="openBtn" type="button"><svg class="i"><use href="#i-file"/></svg>Open a PDF</button>
+      <input id="fileInput" type="file" accept=".pdf,application/pdf" hidden>
+      <button class="btn" id="installBtn" type="button" hidden style="margin-top:8px;width:100%"><svg class="i"><use href="#i-down"/></svg><span id="installTxt">Install app</span></button>
+      <small>Or drop a file anywhere. It never leaves your device.</small>
+    </div>
+    <div>
+      <p class="sec-label">Now reading</p>
+      <div class="card" id="docCard"></div>
+    </div>
+    <div>
+      <p class="sec-label">Built in</p>
+      <div class="lib">
+        <button type="button" id="libGita"><b>Bhagavad Gita</b><span>701 slokas · 18 chapters · Sanskrit</span></button>
+        <button type="button" id="libPaste"><b>Paste any text</b><span>Hindi, Sanskrit or English</span></button>
+      </div>
+    </div>
+    <div class="toc-wrap">
+      <p class="sec-label" id="tocLabel">Contents</p>
+      <nav class="toc" id="toc" aria-labelledby="tocLabel"></nav>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <button class="icon-btn menu-btn" id="menuBtn" type="button" aria-label="Open library"><svg class="i"><use href="#i-menu"/></svg></button>
+      <div class="tabs" role="tablist" id="tabs">
+        <button role="tab" id="tabText" aria-selected="true" type="button">Text</button>
+        <button role="tab" id="tabPage" aria-selected="false" type="button">Original page</button>
+      </div>
+      <span class="spacer"></span>
+      <div class="pager" role="group" aria-label="Page">
+        <button class="icon-btn" id="pgPrev" type="button" aria-label="Previous page"><svg class="i"><use href="#i-left"/></svg></button>
+        <input id="pgInput" type="text" inputmode="numeric" aria-label="Page number" value="1">
+        <span class="tot" id="pgTot">/ 1</span>
+        <button class="icon-btn" id="pgNext" type="button" aria-label="Next page"><svg class="i"><use href="#i-right"/></svg></button>
+      </div>
+      <button class="icon-btn hide-sm" id="fontDown" type="button" aria-label="Smaller text"><span style="font-weight:700;font-size:.8rem">A−</span></button>
+      <button class="icon-btn hide-sm" id="fontUp" type="button" aria-label="Larger text"><span style="font-weight:700;font-size:1.05rem">A+</span></button>
+      <button class="icon-btn" id="modeBtn" type="button" aria-label="Switch colour mode"><svg class="i" id="modeIcon"><use href="#i-moon"/></svg></button>
+      <button class="icon-btn" id="setBtn" type="button" aria-label="Voice, theme and reading settings"><svg class="i"><use href="#i-gear"/></svg></button>
+    </div>
+
+    <section class="sheet" aria-label="Reader">
+      <div class="loading" id="loading" hidden><div style="text-align:center"><div id="loadMsg">Opening…</div><div class="bar"><i id="loadBar"></i></div></div></div>
+      <div class="stage" id="stage" tabindex="0" role="region" aria-label="Page text">
+        <div class="reading" id="textView"></div>
+        <div id="pageView" hidden></div>
+      </div>
+    </section>
+
+    <div class="dock" id="dock">
+      <input class="seek" id="seek" type="range" min="1" max="1" value="1" aria-label="Seek to page">
+      <div class="dock-row">
+        <div class="transport">
+          <button class="icon-btn" id="prevU" type="button" aria-label="Previous sentence"><svg class="i"><use href="#i-prev"/></svg></button>
+          <button class="play" id="playBtn" type="button" aria-label="Play" aria-pressed="false"><svg id="playIcon"><use href="#i-play"/></svg></button>
+          <button class="icon-btn" id="nextU" type="button" aria-label="Next sentence"><svg class="i"><use href="#i-next"/></svg></button>
+        </div>
+        <div class="now"><div class="l1" id="nowTitle">—</div><div class="l2" id="nowSub">—</div></div>
+        <button class="btn quiet" id="voiceTip" type="button" hidden>Sounds robotic? Get a natural voice</button>
+        <label class="field">Speed
+          <select id="rateSel" aria-label="Speaking speed">
+            <option value="0.7">0.7×</option><option value="0.8">0.8×</option><option value="0.9">0.9×</option><option value="1">1×</option>
+            <option value="1.1">1.1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option>
+          </select>
+        </label>
+        <label class="toggle hide-sm"><input type="checkbox" id="autoAdv" checked>Continue to next page</label>
+      </div>
+    </div>
+  </main>
+</div>
+
+<nav class="tabbar" id="tabbar" aria-label="Main">
+  <button type="button" data-go="library" aria-current="false"><span class="ind"><svg class="i"><use href="#i-books"/></svg></span><span>Library</span></button>
+  <button type="button" data-go="reader" aria-current="page"><span class="ind"><svg class="i"><use href="#i-book"/></svg></span><span>Reader</span></button>
+  <button type="button" data-go="settings" aria-current="false"><span class="ind"><svg class="i"><use href="#i-sliders"/></svg></span><span>Settings</span></button>
+</nav>
+<div class="scrim" id="scrim"></div>
+<aside class="panel" id="panel" aria-label="Settings" aria-hidden="true">
+  <span class="grab" id="grabPanel" aria-hidden="true"></span>
+  <header><h2 id="panelTitle">Voice and reading</h2><button class="icon-btn" id="panelClose" type="button" aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button></header>
+  <div class="body" id="panelBody"></div>
+</aside>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/*__LEGACY__*/
+</script>
+<script>
+window.GITA = /*__GITA__*/;
+</script>
+<script>
+(function () {
+'use strict';
+var $ = function (s) { return document.querySelector(s); };
+var el = {};
+['app','rail','menuBtn','openBtn','fileInput','docCard','libGita','libPaste','toc','tocLabel','tabText','tabPage','tabs','pgPrev','pgNext','pgInput','pgTot',
+ 'fontDown','fontUp','setBtn','stage','textView','pageView','loading','loadMsg','loadBar','seek','prevU','playBtn','playIcon','nextU','nowTitle','nowSub',
+ 'rateSel','autoAdv','voiceTip','tabbar','grabRail','grabPanel','installBtn','installTxt','modeBtn','modeIcon','scrim','panel','panelBody','panelTitle','panelClose','toast'].forEach(function (id) { el[id] = document.getElementById(id); });
+
+/* ---------- storage ---------- */
+var store = {
+  get: function (k, d) { try { var v = localStorage.getItem('vachak.' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set: function (k, v) { try { localStorage.setItem('vachak.' + k, JSON.stringify(v)); } catch (e) {} }
+};
+var S = {
+  rate: store.get('rate', 0.9), gap: store.get('gap', 350), lang: store.get('lang', 'auto'), repair: store.get('repair', 'auto'),
+  font: store.get('font', 1.4), mode: store.get('mode', 'system'), palette: store.get('palette', 'mayur'), engine: store.get('engine', null),
+  ui: store.get('ui', 'auto'), pVoiceHi: store.get('pVoiceHi', ''), pVoiceEn: store.get('pVoiceEn', ''),
+  voiceHi: store.get('voiceHi', ''), voiceEn: store.get('voiceEn', ''), gKey: store.get('gKey', ''),
+  gVoiceHi: store.get('gVoiceHi', 'hi-IN-Neural2-A'), gVoiceEn: store.get('gVoiceEn', 'en-IN-Neural2-A'), auto: store.get('auto', true), lock: store.get('lock', false)
+};
+function save(k) { store.set(k, S[k]); }
+
+/* ---------- small helpers ---------- */
+var toastT;
+function toast(msg, ms) { el.toast.textContent = msg; el.toast.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(function () { el.toast.classList.remove('show'); }, ms || 3200); }
+function fmt(n) { return Number(n).toLocaleString('en-IN'); }
+function sleep(ms, t) { return new Promise(function (r) { setTimeout(r, ms); }); }
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+var DEV = /[ऄ-ॣ]/g;
+function devRatio(s) { var d = (s.match(DEV) || []).length, l = (s.match(/[A-Za-z]/g) || []).length; return d + l ? d / (d + l) : 0; }
+var PALS = /*__PALJSON__*/;
+var PATHS = /*__PATHS__*/;
+function applyPlatform() { document.documentElement.setAttribute('data-platform', window.__plat ? window.__plat(S.ui) : 'desktop'); }
+var mq = window.matchMedia ? matchMedia('(prefers-color-scheme: dark)') : { matches: false };
+function resolvedTheme() { return S.mode === 'system' ? (mq.matches ? 'dark' : 'light') : S.mode; }
+function applyTheme() {
+  var r = document.documentElement, th = resolvedTheme(); if (!PALS[S.palette]) S.palette = 'mayur';
+  r.setAttribute('data-palette', S.palette); r.setAttribute('data-theme', th);
+  var m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute('content', PALS[S.palette][th].bg);
+  if (el.modeIcon) { el.modeIcon.innerHTML = '<use href="#' + (th === 'dark' ? 'i-sun' : 'i-moon') + '"/>'; el.modeBtn.setAttribute('aria-label', th === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'); }
+}
+if (mq.addEventListener) mq.addEventListener('change', function () { if (S.mode === 'system') applyTheme(); });
+function applyFont() { document.documentElement.style.setProperty('--read-size', S.font + 'rem'); }
+
+/* ---------- text pipeline ---------- */
+var WATERMARK = /ebook converter DEMO Watermarks|^\s*\*{3,}.*\*{3,}\s*$/i;
+
+function splitSentences(s) {
+  var out = [], start = 0, i = 0, n = s.length;
+  while (i < n) {
+    var ch = s[i];
+    if (ch === '।' || ch === '॥') {
+      while (i < n && (s[i] === '।' || s[i] === '॥')) i++;
+      var q = /^\s*[’”)\]]+/.exec(s.slice(i, i + 6)); if (q) i += q[0].length;
+      var m = /^\s*[\d०-९][\d०-९.\-–,]*\s*[।॥]+/.exec(s.slice(i, i + 24));
+      if (m) i += m[0].length;
+      out.push([start, i]); start = i; continue;
+    }
+    if (ch === '?' || ch === '!') {
+      while (i < n && (s[i] === '?' || s[i] === '!')) i++;
+      while (i < n && /[’”'")\]]/.test(s[i])) i++;
+      out.push([start, i]); start = i; continue;
+    }
+    if (ch === '.' && /\s/.test(s[i + 1] || ' ') && /[a-z0-9)]/i.test(s[i - 1] || '') && !/\b(Dr|Mr|Mrs|St|Sri|Shri|No)$/.test(s.slice(Math.max(0, i - 4), i))) {
+      i++; out.push([start, i]); start = i; continue;
+    }
+    i++;
+  }
+  if (start < n) out.push([start, n]);
+  return out;
+}
+function toSpeech(s) {
+  return s.replace(/[​-‍﻿]/g, '')
+    .replace(/[‘’“”"«»\[\]*_#|~^]/g, ' ')
+    .replace(/[—–]/g, ', ')
+    .replace(/[।॥]+\s*[\d०-९][\d०-९.\-–,]*\s*[।॥]+/g, ' । ')
+    .replace(/॥+/g, ' । ')
+    .replace(/।{2,}/g, ' । ')
+    .replace(/\s+/g, ' ').trim();
+}
+function isSpeakable(sp) { return /[ऄ-ॣA-Za-z]/.test(sp); }
+
+// Turns the text of one page into speakable units, keeping a link back to the PDF lines each unit came from.
+function buildUnits(lines) {
+  var joined = '', offs = [];
+  lines.forEach(function (l, i) { offs.push(joined.length); joined += l.t + (i < lines.length - 1 ? ' ' : ''); });
+  var spans = splitSentences(joined), units = [];
+  spans.forEach(function (sp) {
+    var a = sp[0], b = sp[1];
+    while (a < b && /\s/.test(joined[a])) a++;
+    while (b > a && /\s/.test(joined[b - 1])) b--;
+    if (b <= a) return;
+    var txt = joined.slice(a, b);
+    var prev = units[units.length - 1];
+    if (prev && toSpeech(txt).replace(/[^ऄ-ॣA-Za-z]/g, '').length < 3) { prev.text += ' ' + txt; prev.end = b; return; }
+    units.push({ text: txt, start: a, end: b });
+  });
+  // break very long units at commas / spaces so each spoken piece stays short
+  var final = [];
+  units.forEach(function (u) {
+    if (u.text.length <= 260) { final.push(u); return; }
+    var pos = 0, t = u.text;
+    while (pos < t.length) {
+      var cut = Math.min(pos + 200, t.length);
+      if (cut < t.length) {
+        var seg = t.slice(pos, cut + 40), k = Math.max(seg.lastIndexOf(', '), seg.lastIndexOf('; '), seg.lastIndexOf(' ', 220));
+        if (k > 60) cut = pos + k + 1;
+      }
+      final.push({ text: t.slice(pos, cut).trim(), start: u.start + pos, end: u.start + cut });
+      pos = cut;
+    }
+  });
+  final.forEach(function (u) {
+    u.lines = [];
+    for (var i = 0; i < lines.length; i++) { var ls = offs[i], le = ls + lines[i].t.length; if (le > u.start && ls < u.end) u.lines.push(i); }
+    u.para = u.lines.length ? !!lines[u.lines[0]].para && offs[u.lines[0]] >= u.start - 1 : false;
+    u.speech = toSpeech(u.text); u.ok = isSpeakable(u.speech);
+  });
+  return final;
+}
+
+/* ---------- documents ---------- */
+var DOC = null;           // {kind:'pdf'|'gita'|'text', title, pages, pdf, legacy, key}
+var cache = new Map();
+var outlineItems = [];
+
+function legacyOn() { return DOC && DOC.legacy; }
+
+function groupLines(items, vp) {
+  var lines = [], cur = null;
+  items.forEach(function (it) {
+    if (typeof it.str !== 'string') return;
+    var tr = it.transform, x = tr[4], y = tr[5], h = it.height || Math.hypot(tr[2], tr[3]) || 10, w = it.width || 0;
+    if (!it.str.trim() && !cur) return;
+    if (cur && Math.abs(y - cur.y) <= Math.max(2, 0.45 * Math.max(h, cur.h))) { cur.items.push({ s: it.str, x: x, w: w }); cur.h = Math.max(cur.h, h); cur.x1 = Math.max(cur.x1, x + w); cur.x0 = Math.min(cur.x0, x); }
+    else { cur = { y: y, h: h, x0: x, x1: x + w, items: [{ s: it.str, x: x, w: w }] }; lines.push(cur); }
+  });
+  return lines.map(function (L) {
+    L.items.sort(function (a, b) { return a.x - b.x; });
+    var s = '', prevEnd = null;
+    L.items.forEach(function (it) {
+      // add a space only when the previous run has a known width and a real gap follows it
+      if (prevEnd !== null && prevEnd > 0 && it.x - prevEnd > 0.38 * L.h && !/\s$/.test(s) && !/^\s/.test(it.s)) s += ' ';
+      s += it.s; prevEnd = it.w > 0 ? it.x + it.w : 0;
+    });
+    return { raw: s, y: L.y, h: L.h, x0: L.x0, x1: L.x1 };
+  });
+}
+
+async function buildPdfPage(n) {
+  var page = await DOC.pdf.getPage(n);
+  var vp = page.getViewport({ scale: 1 });
+  var tc = await page.getTextContent();
+  var raw = groupLines(tc.items, vp);
+  page.cleanup();
+  var lines = raw.map(function (L) {
+    var t = (legacyOn() ? LegacyDevanagari.convert(L.raw) : L.raw).replace(/\s+/g, ' ').trim();
+    return { t: t, y: L.y, h: L.h, x0: L.x0, x1: L.x1 };
+  }).filter(function (L) { return L.t && !WATERMARK.test(L.t); });
+  // drop a lone page number at the top or bottom
+  [0, lines.length - 1].forEach(function (k, j) {
+    if (lines.length > 1 && lines[k] && /^[\d०-९]{1,4}$/.test(lines[k].t)) lines[k] = null;
+  });
+  lines = lines.filter(Boolean);
+  // paragraph starts: a larger vertical gap, or an indented first line after a finished sentence
+  var hs = lines.map(function (l) { return l.h; }).sort(function (a, b) { return a - b; }), med = hs.length ? hs[hs.length >> 1] : 10;
+  var xs = lines.map(function (l) { return l.x0; }).sort(function (a, b) { return a - b; }), left = xs.length ? xs[Math.floor(xs.length * 0.25)] : 0;
+  lines.forEach(function (l, i) {
+    var p = lines[i - 1];
+    l.para = i === 0 || (p && ((p.y - l.y) > 1.9 * med || (l.x0 - left > 0.8 * med && /[।॥.?!”’]\s*$/.test(p.t))));
+  });
+  var model = { n: n, kind: 'pdf', lines: lines, vp: vp, raw: raw.length };
+  model.units = buildUnits(lines);
+  return model;
+}
+
+function gitaSpeech(lines) {
+  return toSpeech(lines.join(' ')).replace(/\s*।\s*$/, ' ।');
+}
+function buildGitaPage(n) {
+  var ch = window.GITA[n - 1];
+  var units = [{ kind: 'head', text: 'अध्याय ' + n + ' — ' + ch.name, speech: 'अध्याय ' + n + '। ' + ch.name + '।', ok: true, lines: [], gap: 900 }];
+  ch.v.forEach(function (v) {
+    var txt = v[1].join('\n').replace(/।।\s*\d+\.\d+(?:-\d+\.\d+)?\s*।।/g, '।।');
+    units.push({ kind: 'verse', no: v[0], text: txt, speech: gitaSpeech(v[1]), ok: true, lines: [], gap: Math.max(700, S.gap * 2.2) });
+  });
+  return { n: n, kind: 'gita', units: units, lines: [], ch: ch };
+}
+function buildTextPage() {
+  var paras = DOC.text.split(/\n\s*\n/).map(function (p) { return p.replace(/\s*\n\s*/g, ' ').trim(); }).filter(Boolean);
+  var units = [];
+  paras.forEach(function (p) {
+    var sp = splitSentences(p), first = true;
+    sp.forEach(function (s) {
+      var t = p.slice(s[0], s[1]).trim(); if (!t) return;
+      var speech = toSpeech(t);
+      if (units.length && !isSpeakable(speech)) { units[units.length - 1].text += ' ' + t; return; }
+      units.push({ text: t, speech: speech, ok: isSpeakable(speech), para: first, lines: [] }); first = false;
+    });
+  });
+  return { n: 1, kind: 'text', units: units, lines: [] };
+}
+async function getModel(n) {
+  var k = DOC.key + ':' + n + ':' + (DOC.legacy ? 1 : 0);
+  if (cache.has(k)) return cache.get(k);
+  var m = DOC.kind === 'gita' ? buildGitaPage(n) : DOC.kind === 'text' ? buildTextPage() : await buildPdfPage(n);
+  cache.set(k, m);
+  if (cache.size > 30) cache.delete(cache.keys().next().value);
+  return m;
+}
+function prefetch(n) { if (DOC && DOC.kind === 'pdf') for (var i = 1; i <= 2; i++) if (n + i <= DOC.pages) getModel(n + i).catch(function () {}); }
+
+/* ---------- rendering ---------- */
+var P = { token: 0, playing: false, page: 1, idx: 0, model: null, view: 'text' };
+var spans = [];
+
+function renderText() {
+  var m = P.model, h = '';
+  spans = [];
+  if (!m) { el.textView.innerHTML = ''; return; }
+  if (m.kind === 'gita') {
+    var ch = m.ch;
+    h += '<div class="chapter-head"><div class="kicker">Chapter ' + ch.n + ' of 18</div><h2 lang="sa"><span class="u" data-i="0">' + esc(ch.name) + '</span></h2><div class="sub">' + esc(ch.tr) + ' · ' + esc(ch.en) + '</div></div>';
+    m.units.forEach(function (u, i) {
+      if (u.kind !== 'verse') return;
+      h += '<div class="verse"><span class="no">' + esc(ch.n + '.' + u.no) + '</span><div class="tx"><span class="u" data-i="' + i + '" lang="sa">' + esc(u.text) + '</span></div></div>';
+    });
+  } else if (!m.units.length) {
+    h = '<div class="notice"><h3>No readable text on this page</h3><p>This page may be a scanned image, a blank page or a picture. Switch to <b>Original page</b> to see it, or move on to the next page.</p></div>';
+  } else {
+    var open = false;
+    m.units.forEach(function (u, i) {
+      if (u.para || !open) { if (open) h += '</p>'; h += '<p>'; open = true; }
+      h += '<span class="u' + (u.ok ? '' : ' silent') + '" data-i="' + i + '">' + esc(u.text) + '</span> ';
+    });
+    if (open) h += '</p>';
+  }
+  el.textView.innerHTML = h;
+  spans = Array.prototype.slice.call(el.textView.querySelectorAll('.u'));
+  var byIdx = {}; spans.forEach(function (s) { byIdx[s.dataset.i] = s; }); spans.byIdx = byIdx;
+  el.stage.scrollTop = 0;
+}
+
+var renderTask = null, ovs = [];
+async function renderPageView() {
+  var m = P.model;
+  if (!m || DOC.kind !== 'pdf') return;
+  var want = P.page;
+  var page = await DOC.pdf.getPage(want);
+  if (want !== P.page || P.view !== 'page') return;
+  var cw = Math.max(280, el.pageView.clientWidth || el.stage.clientWidth - 40);
+  var vp0 = page.getViewport({ scale: 1 }), scale = Math.min(2.4, cw / vp0.width), vp = page.getViewport({ scale: scale }), dpr = Math.min(2, window.devicePixelRatio || 1);
+  var wrap = document.createElement('div'); wrap.className = 'page-wrap'; wrap.style.width = Math.floor(vp.width) + 'px'; wrap.style.height = Math.floor(vp.height) + 'px';
+  var cv = document.createElement('canvas'); cv.width = Math.floor(vp.width * dpr); cv.height = Math.floor(vp.height * dpr); cv.style.width = Math.floor(vp.width) + 'px'; cv.style.height = Math.floor(vp.height) + 'px';
+  wrap.appendChild(cv);
+  ovs = [];
+  m.lines.forEach(function (L, i) {
+    var r = vp.convertToViewportRectangle([L.x0, L.y - 0.28 * L.h, L.x1, L.y + 0.95 * L.h]);
+    var d = document.createElement('div'); d.className = 'ov'; d.dataset.l = i;
+    d.style.left = Math.min(r[0], r[2]) + 'px'; d.style.top = Math.min(r[1], r[3]) + 'px'; d.style.width = Math.abs(r[2] - r[0]) + 'px'; d.style.height = Math.abs(r[3] - r[1]) + 'px';
+    wrap.appendChild(d); ovs.push(d);
+  });
+  el.pageView.innerHTML = ''; el.pageView.appendChild(wrap);
+  if (renderTask) { try { renderTask.cancel(); } catch (e) {} }
+  renderTask = page.render({ canvasContext: cv.getContext('2d'), viewport: page.getViewport({ scale: scale * dpr }) });
+  try { await renderTask.promise; } catch (e) {}
+  markCurrent();
+}
+
+function markCurrent() {
+  var m = P.model; if (!m) return;
+  var cur = m.units[P.idx];
+  spans.forEach(function (s) { s.classList.remove('on'); });
+  var sp = spans.byIdx && spans.byIdx[P.idx];
+  if (sp) {
+    sp.classList.add('on');
+    if (P.view === 'text') {
+      var sr = el.stage.getBoundingClientRect(), r = sp.getBoundingClientRect();
+      if (r.top < sr.top + sr.height * 0.18 || r.bottom > sr.top + sr.height * 0.78) el.stage.scrollTo({ top: el.stage.scrollTop + (r.top - sr.top) - sr.height * 0.32, behavior: 'smooth' });
+    }
+  }
+  ovs.forEach(function (d) { d.classList.remove('on'); });
+  if (cur && cur.lines) cur.lines.forEach(function (i) { if (ovs[i]) ovs[i].classList.add('on'); });
+  updateNow();
+}
+
+var statusMsg = '';
+function setStatus(m) { statusMsg = m || ''; if (el.nowSub) updateNow(); }
+function updateNow() {
+  var m = P.model, n = DOC ? DOC.pages : 1;
+  var unitLabel = DOC && DOC.kind === 'gita' ? 'Chapter' : 'Page';
+  el.pgInput.value = P.page; el.pgTot.textContent = '/ ' + fmt(n);
+  el.seek.max = Math.max(1, n); el.seek.value = P.page;
+  el.pgPrev.disabled = P.page <= 1; el.pgNext.disabled = P.page >= n;
+  el.nowTitle.textContent = DOC ? DOC.title : '—';
+  if (DOC && 'mediaSession' in navigator && window.MediaMetadata && P._mk !== DOC.title + P.page) { P._mk = DOC.title + P.page; try { navigator.mediaSession.metadata = new MediaMetadata({ title: DOC.title, artist: unitLabel + ' ' + P.page + ' of ' + n, album: 'Vachak', artwork: [{ src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }] }); } catch (e) {} }
+  var u = m && m.units[P.idx];
+  el.nowSub.textContent = statusMsg ? statusMsg : DOC ? unitLabel + ' ' + fmt(P.page) + ' of ' + fmt(n) + (m && m.units.length ? ' · line ' + Math.min(P.idx + 1, m.units.length) + ' of ' + m.units.length : '') : '';
+  document.title = 'Vachak Reader';
+  Array.prototype.forEach.call(el.toc.querySelectorAll('button[data-p]'), function (b) { b.setAttribute('aria-current', DOC && DOC.kind === 'gita' && +b.dataset.p === P.page ? 'true' : 'false'); });
+}
+
+function renderDocCard() {
+  if (!DOC) { el.docCard.innerHTML = '<div class="doc-meta">Nothing open yet.</div>'; return; }
+  var chips = '';
+  if (DOC.kind === 'pdf') {
+    chips += '<span class="chip' + (DOC.legacy ? '' : ' off') + '">Font repair ' + (DOC.legacy ? 'on' : 'off') + '</span>';
+  } else if (DOC.kind === 'gita') chips += '<span class="chip">Sanskrit</span>';
+  var meta = DOC.kind === 'gita' ? '18 chapters · 701 slokas' : DOC.kind === 'text' ? 'Pasted text' : fmt(DOC.pages) + ' pages';
+  el.docCard.innerHTML = '<div class="doc-title">' + esc(DOC.title) + '</div><div class="doc-meta">' + meta + '</div>' + (chips ? '<div class="chip-row">' + chips + '</div>' : '');
+}
+
+function renderToc() {
+  var h = '';
+  if (DOC && DOC.kind === 'gita') {
+    el.tocLabel.textContent = 'Chapters';
+    window.GITA.forEach(function (c) { h += '<button type="button" data-p="' + c.n + '"><span class="n">' + c.n + '</span><span class="t" lang="sa">' + esc(c.name) + '<span class="e">' + esc(c.en) + '</span></span></button>'; });
+  } else if (DOC && DOC.kind === 'pdf' && outlineItems.length) {
+    el.tocLabel.textContent = 'Contents';
+    outlineItems.forEach(function (o, i) { h += '<button type="button" data-o="' + i + '" style="padding-left:' + (10 + o.depth * 14) + 'px"><span class="t' + (devRatio(o.title) < 0.2 ? ' lat' : '') + '">' + esc(o.title) + '</span></button>'; });
+  } else {
+    el.tocLabel.textContent = 'Contents';
+    h = '<div class="doc-meta" style="padding:4px 6px">' + (DOC && DOC.kind === 'pdf' ? 'This PDF has no bookmarks. Use the page box or the slider to jump.' : 'Chapters or bookmarks appear here.') + '</div>';
+  }
+  el.toc.innerHTML = h;
+}
+
+/* ---------- navigation ---------- */
+async function showPage(n, idx) {
+  n = Math.max(1, Math.min(DOC.pages, n | 0 || 1));
+  P.page = n; P.idx = idx || 0;
+  P.model = await getModel(n);
+  if (P.page !== n) return;
+  renderText();
+  if (P.view === 'page') { el.textView.hidden = true; el.pageView.hidden = false; renderPageView(); } else { el.textView.hidden = false; el.pageView.hidden = true; }
+  markCurrent(); savePos(); prefetch(n);
+}
+async function jump(n, idx, forcePlay) {
+  var was = P.playing || forcePlay;
+  P.token++; P.playing = false; stopAudio();
+  await showPage(n, idx);
+  if (was) play(); else setPlayUI();
+}
+function savePos() { if (DOC && DOC.key && DOC.kind !== 'text') store.set('pos.' + DOC.key, { p: P.page, i: P.idx }); }
+
+function setPlayUI() {
+  el.playIcon.innerHTML = '<use href="#' + (P.playing ? 'i-pause' : 'i-play') + '"/>';
+  el.playBtn.setAttribute('aria-label', P.playing ? 'Pause' : 'Play'); el.playBtn.setAttribute('aria-pressed', P.playing ? 'true' : 'false');
+  if ('mediaSession' in navigator) { try { navigator.mediaSession.playbackState = P.playing ? 'playing' : 'paused'; } catch (e) {} }
+}
+
+/* ---------- voices ---------- */
+var voices = [];
+function loadVoices() { try { voices = window.speechSynthesis ? speechSynthesis.getVoices() : []; } catch (e) { voices = []; } }
+function vscore(v) {
+  var n = v.name.toLowerCase(), s = 0;
+  if (/natural|neural/.test(n)) s += 60; if (/online/.test(n)) s += 20; if (/google/.test(n)) s += 35; if (/premium|enhanced|siri/.test(n)) s += 30;
+  if (!v.localService) s += 10; if (/compact|espeak/.test(n)) s -= 30; return s;
+}
+function voiceList(kind) {
+  var re = kind === 'en' ? /^en/i : /^(hi|sa|mr|ne)/i;
+  return voices.filter(function (v) { return re.test(v.lang); }).sort(function (a, b) {
+    var pa = kind === 'en' ? (/en-in/i.test(a.lang) ? 1 : 0) : (/^hi/i.test(a.lang) ? 1 : 0), pb = kind === 'en' ? (/en-in/i.test(b.lang) ? 1 : 0) : (/^hi/i.test(b.lang) ? 1 : 0);
+    return (pb * 100 + vscore(b)) - (pa * 100 + vscore(a));
+  });
+}
+function pickVoice(kind) {
+  var list = voiceList(kind), want = kind === 'en' ? S.voiceEn : S.voiceHi;
+  var v = list.filter(function (x) { return x.voiceURI === want || x.name === want; })[0];
+  return v || list[0] || null;
+}
+var warnedNoHindi = false;
+function voiceIsBasic() { var l = voiceList('hi'); return !l.length || vscore(l[0]) < 40; }
+function checkVoiceQuality() { el.voiceTip.hidden = !((S.engine || 'browser') === 'browser' && voiceIsBasic()); }
+
+
+/* ---------- natural voice pack (Piper neural voices, run on this device) ---------- */
+var Pack = (function () {
+  var LOCAL = 'voices/', HF = 'https://huggingface.co/rhasspy/piper-voices/resolve/main/', CACHE = 'vachak-voices-v1';
+  var VENDOR = ['vendor/piper/PhonemizeWebWorker.js', 'vendor/piper/OnnxWebWorker.js', 'vendor/piper/piper_phonemize.wasm', 'vendor/piper/piper_phonemize.data', 'vendor/piper/onnx/ort-wasm-simd-threaded.wasm'];
+  var VENDOR_MB = [0.1, 15.6, 0.6, 18.1, 10.4];
+  var catalog = null, origin = null, ph = null, on = null, chain = Promise.resolve(), mem = {}, jobs = {}, order = [];
+  function abs(p) { return new URL(p, location.href).href; }
+  function noop() {}
+
+  async function jsonCached(url) {
+    var c = null; try { c = await caches.open(CACHE); } catch (e) {}
+    try {
+      var r = await fetch(url);
+      if (r.ok) { var t = await r.text(), j = JSON.parse(t); if (c) { try { await c.put(url, new Response(t, { headers: { 'content-type': 'application/json' } })); } catch (e) {} } return j; }
+    } catch (e) {}
+    if (c) { var h = await c.match(url); if (h) { try { return await h.json(); } catch (e) {} } }
+    return null;
+  }
+  function peekLocal() {
+    return jsonCached(LOCAL + 'voices.json').then(function (j) {
+      if (j && typeof j === 'object' && Object.keys(j).length) { catalog = j; origin = LOCAL; return true; } return false;
+    });
+  }
+  async function loadCatalog() {
+    if (catalog) return catalog;
+    if (await peekLocal()) return catalog;
+    var j = await jsonCached(HF + 'voices.json');
+    if (!j) throw new Error('Could not reach the voice list. Check your internet connection.');
+    catalog = j; origin = HF; return catalog;
+  }
+  function files(id) {
+    var v = catalog[id], onnx, cfg;
+    Object.keys(v.files).forEach(function (k) { if (/\.onnx$/.test(k)) onnx = k; else if (/\.onnx\.json$/.test(k)) cfg = k; });
+    return { onnx: origin + onnx, cfg: origin + cfg, size: (v.files[onnx] && v.files[onnx].size_bytes) || 63e6 };
+  }
+  function list(kind) {
+    return Object.keys(catalog || {}).filter(function (k) { var q = catalog[k].quality; return k.indexOf(kind === 'en' ? 'en_' : 'hi_') === 0 && q !== 'x_low' && q !== 'low'; }).sort();
+  }
+  function label(id) {
+    var p = id.split('-'), n = (p[1] || id).replace(/_/g, ' '); n = n.charAt(0).toUpperCase() + n.slice(1);
+    var f = files(id);
+    return n + ' (' + p[0].replace('_', '-') + ', ' + (p[2] || '') + ', ' + Math.round(f.size / 1e6) + ' MB)';
+  }
+  function pickDefaults() {
+    var hi = list('hi'), en = list('en');
+    if (!S.pVoiceHi || hi.indexOf(S.pVoiceHi) < 0) S.pVoiceHi = hi.filter(function (k) { return /priyamvada/.test(k); })[0] || hi[0] || '';
+    if (!S.pVoiceEn || en.indexOf(S.pVoiceEn) < 0) S.pVoiceEn = en.filter(function (k) { return /lessac|jenny|alba/.test(k) && /medium/.test(k); })[0] || en[0] || '';
+  }
+  async function cacheOpen() { try { return await caches.open(CACHE); } catch (e) { return null; } }
+  async function fetchCached(url, onbytes, discard) {
+    var c = await cacheOpen(), hit = c && await c.match(url);
+    if (hit) { if (discard) { if (onbytes) onbytes(+hit.headers.get('content-length') || 0); return null; } var b0 = await hit.blob(); if (onbytes) onbytes(b0.size); return b0; }
+    var r = await fetch(url); if (!r.ok) throw new Error('Download failed (' + r.status + ')');
+    var rd = r.body && r.body.getReader(), chunks = [];
+    if (rd) { for (;;) { var st = await rd.read(); if (st.done) break; chunks.push(st.value); if (onbytes) onbytes(st.value.length); } }
+    var blob = rd ? new Blob(chunks) : await r.blob();
+    if (c) { try { await c.put(url, new Response(blob, { headers: { 'content-length': String(blob.size), 'content-type': r.headers.get('content-type') || guessType(url) } })); } catch (e) {} }
+    return discard ? null : blob;
+  }
+  function guessType(u) { return /\.js$/.test(u) ? 'text/javascript' : /\.wasm$/.test(u) ? 'application/wasm' : /\.json$/.test(u) ? 'application/json' : 'application/octet-stream'; }
+  var engineOK = false;
+  async function ensureEngine(onbytes) {
+    if (engineOK) return;
+    for (var i = 0; i < VENDOR.length; i++) await fetchCached(abs(VENDOR[i]), onbytes, true);
+    engineOK = true;
+  }
+  async function voice(id, onbytes) {
+    if (mem[id]) return mem[id];
+    await loadCatalog(); var f = files(id);
+    var cfg = JSON.parse(await (await fetchCached(f.cfg)).text());
+    var blob = await fetchCached(f.onnx, onbytes);
+    return (mem[id] = [cfg, URL.createObjectURL(blob)]);
+  }
+  async function installed(id) {
+    var c = await cacheOpen(); if (!c || !catalog || !catalog[id]) return false;
+    return !!(await c.match(files(id).onnx));
+  }
+  async function engineReady() { var c = await cacheOpen(); if (!c) return false; for (var i = 0; i < VENDOR.length; i++) if (!(await c.match(abs(VENDOR[i])))) return false; return true; }
+
+  function workers() {
+    if (ph) return;
+    ph = new Worker('vendor/piper/PhonemizeWebWorker.js', { type: 'module' }); on = new Worker('vendor/piper/OnnxWebWorker.js', { type: 'module' });
+    ph.postMessage({ type: 'constructor', data: { basePath: abs('vendor/piper/') } });
+    on.postMessage({ type: 'constructor', data: { basePath: abs('vendor/piper/onnx/'), numThreads: 1 } });
+  }
+  function reset() { try { if (ph) ph.terminate(); if (on) on.terminate(); } catch (e) {} ph = on = null; }
+  function ask(w, type, data) {
+    return new Promise(function (res, rej) {
+      var to = setTimeout(function () { rej(new Error('The voice engine took too long to answer.')); }, 120000);
+      w.onmessage = function (e) { clearTimeout(to); res(e.data); };
+      w.onerror = function (e) { clearTimeout(to); rej(new Error((e && e.message) || 'The voice engine could not start.')); };
+      w.postMessage({ type: type, data: data });
+    });
+  }
+  // One sentence in, a WAV object URL out. Jobs run one at a time; a job from an old playback run is skipped.
+  function synth(text, id, tk, onbytes) {
+    var key = id + '|' + text;
+    if (jobs[key]) return jobs[key];
+    var job = chain.then(async function () {
+      if (tk !== undefined && tk !== P.token) return null;
+      await ensureEngine(onbytes);
+      var vd = await voice(id, onbytes);
+      workers();
+      var pd = await ask(ph, 'phonemize', [text, vd]);
+      var out = await ask(on, 'generate', [pd, vd, 0]);
+      return URL.createObjectURL(out.file);
+    }).catch(function (e) { reset(); throw e; });
+    chain = job.catch(noop); jobs[key] = job; order.push(key);
+    job.then(function (u) { if (!u) delete jobs[key]; }, function () { delete jobs[key]; });
+    while (order.length > 12) { var k = order.shift(), j = jobs[k]; delete jobs[k]; if (j) j.then(function (u) { if (u) URL.revokeObjectURL(u); }, noop); }
+    return job;
+  }
+  // Downloads the voice engine files and the chosen voices so everything works offline afterwards.
+  async function install(ids, cb) {
+    await loadCatalog();
+    var total = VENDOR_MB.reduce(function (a, b) { return a + b; }, 0) * 1e6, done = 0;
+    ids.forEach(function (id) { total += files(id).size; });
+    function add(n) { done += n; cb(Math.min(1, done / total), 'Downloading ' + Math.round(done / 1e6) + ' of ' + Math.round(total / 1e6) + ' MB'); }
+    try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+    for (var i = 0; i < VENDOR.length; i++) await fetchCached(abs(VENDOR[i]), add, true);
+    engineOK = true;
+    for (var k = 0; k < ids.length; k++) await voice(ids[k], add);
+    cb(1, 'Ready. Works offline.');
+  }
+  async function remove() { reset(); mem = {}; jobs = {}; order = []; engineOK = false; try { await caches.delete(CACHE); } catch (e) {} }
+  return { peekLocal: peekLocal, catalog: loadCatalog, list: list, label: label, defaults: pickDefaults, installed: installed, engineReady: engineReady, synth: synth, install: install, remove: remove, origin: function () { return origin; } };
+})();
+
+/* ---------- speaking ---------- */
+var audioEl = null, cloudCache = new Map();
+function sharedAudio() { if (!audioEl) { audioEl = new Audio(); audioEl.preservesPitch = true; audioEl.setAttribute('playsinline', ''); } return audioEl; }
+function unlockAudio() {
+  var a = sharedAudio(); if (a.__unlocked) return; a.__unlocked = true;
+  a.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=';
+  var p = a.play(); if (p && p.catch) p.catch(function () {});
+}
+function stopAudio() {
+  try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {}
+  if (audioEl) { try { audioEl.onended = null; audioEl.onerror = null; audioEl.pause(); } catch (e) {} }
+}
+function unitKind(u) {
+  if (S.lang === 'en') return 'en';
+  if (S.lang === 'hi' || S.lang === 'sa') return S.lang;
+  if (DOC && DOC.kind === 'gita') return 'sa';
+  return devRatio(u.speech) >= 0.3 ? 'hi' : 'en';
+}
+function chunkText(t, max) {
+  var parts = t.split(/(?<=[,;:।?!])\s+/), out = [], cur = '';
+  parts.forEach(function (p) {
+    while (p.length > max) { var k = p.lastIndexOf(' ', max); if (k < 40) k = max; if (cur) { out.push(cur); cur = ''; } out.push(p.slice(0, k)); p = p.slice(k).trim(); }
+    if ((cur + ' ' + p).trim().length > max) { if (cur) out.push(cur); cur = p; } else cur = (cur + ' ' + p).trim();
+  });
+  if (cur) out.push(cur);
+  return out.filter(function (x) { return x.trim(); });
+}
+function speakBrowser(text, kind, t) {
+  return new Promise(function (res) {
+    if (!window.speechSynthesis) { toast('This browser has no built-in speech. Try Chrome, Edge or Safari.'); P.token++; return res(); }
+    var vk = kind === 'en' ? 'en' : 'hi', v = pickVoice(vk), chunks = chunkText(text, 170), i = 0;
+    if (!v && vk === 'hi' && !warnedNoHindi) { warnedNoHindi = true; toast('No Hindi voice found on this device. Open settings for how to add one.', 6000); }
+    function next() {
+      if (t !== P.token || i >= chunks.length) return res();
+      var ut = new SpeechSynthesisUtterance(chunks[i++]);
+      if (v) { ut.voice = v; ut.lang = v.lang; } else ut.lang = vk === 'en' ? 'en-IN' : 'hi-IN';
+      ut.rate = Math.max(0.3, Math.min(2, S.rate * (kind === 'sa' ? 0.94 : 1))); ut.pitch = 1;
+      ut.onend = next;
+      ut.onerror = function (e) { if (e && (e.error === 'interrupted' || e.error === 'canceled')) return res(); if (e && e.error === 'not-allowed') { toast('Tap play again to allow audio.'); P.token++; return res(); } next(); };
+      try { speechSynthesis.speak(ut); } catch (err) { res(); }
+    }
+    next();
+  });
+}
+async function cloudFetch(text, kind) {
+  var vk = kind === 'en' ? 'en' : 'hi', name = vk === 'en' ? S.gVoiceEn : S.gVoiceHi, lang = name.split('-').slice(0, 2).join('-');
+  var key = name + '|' + S.rate + '|' + text;
+  if (cloudCache.has(key)) return cloudCache.get(key);
+  var p = fetch('https://texttospeech.googleapis.com/v1/text:synthesize?key=' + encodeURIComponent(S.gKey), {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ input: { text: text }, voice: { languageCode: lang, name: name }, audioConfig: { audioEncoding: 'MP3', speakingRate: Math.max(0.5, Math.min(1.8, S.rate)) } })
+  }).then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error((j.error && j.error.message) || r.status); return j; }); })
+    .then(function (j) { var b = atob(j.audioContent), a = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) a[i] = b.charCodeAt(i); return URL.createObjectURL(new Blob([a], { type: 'audio/mpeg' })); });
+  cloudCache.set(key, p);
+  if (cloudCache.size > 8) cloudCache.delete(cloudCache.keys().next().value);
+  p.catch(function () { cloudCache.delete(key); });
+  return p;
+}
+async function speakCloud(text, kind, t) {
+  var url = await cloudFetch(text, kind);
+  if (t !== P.token) return;
+  // warm the next sentence while this one plays
+  var nu = P.model && P.model.units[P.idx + 1]; if (nu && nu.ok) cloudFetch(nu.speech, unitKind(nu)).catch(function () {});
+  await new Promise(function (res, rej) {
+    var a = sharedAudio(); a.src = url; a.playbackRate = 1; a.onended = res; a.onerror = function () { rej(new Error('audio')); };
+    a.play().catch(rej);
+  });
+}
+
+async function speakPack(u, kind, t) {
+  var vk = kind === 'en' ? 'en' : 'hi';
+  await Pack.catalog(); Pack.defaults();
+  function idFor(k) { return k === 'en' ? S.pVoiceEn : S.pVoiceHi; }
+  var id = idFor(vk); if (!id) throw new Error('No voice found for this language.');
+  var got = 0; setStatus('Preparing the natural voice…');
+  var url;
+  try { url = await Pack.synth(u.speech, id, t, function (n) { got += n; setStatus('Downloading the voice, ' + Math.round(got / 1e6) + ' MB…'); }); } finally { setStatus(''); }
+  if (t !== P.token || !url) return;
+  [1, 2].forEach(function (k) { var nu = P.model && P.model.units[P.idx + k]; if (nu && nu.ok) Pack.synth(nu.speech, idFor(unitKind(nu) === 'en' ? 'en' : 'hi'), t).catch(function () {}); });
+  await new Promise(function (res, rej) {
+    var a = sharedAudio(); a.src = url; a.playbackRate = Math.max(0.6, Math.min(1.6, S.rate));
+    a.onended = res; a.onerror = function () { rej(new Error('Could not play the audio.')); };
+    a.play().catch(rej);
+  });
+}
+async function speakUnit(u, t) {
+  var kind = unitKind(u);
+  if (S.engine === 'pack' && PATHS.pack) {
+    try { await speakPack(u, kind, t); return; }
+    catch (e) {
+      if (t !== P.token) return;
+      toast('Natural voice problem: ' + (e && e.message ? e.message : 'unknown') + ' Using this device\'s voice for now.', 6000);
+      S.engine = 'browser'; checkVoiceQuality();
+    }
+  }
+  if (S.engine === 'google' && S.gKey) {
+    try { await speakCloud(u.speech, kind, t); return; }
+    catch (e) {
+      if (t !== P.token) return;
+      toast('Cloud voice failed (' + (e && e.message ? e.message : 'network') + '). Using this device\'s voice.', 5000);
+      S.engine = 'browser'; save('engine');
+    }
+  }
+  await speakBrowser(u.speech, kind, t);
+}
+
+/* ---------- playback loop ---------- */
+async function play() {
+  if (!DOC || P.playing) return;
+  P.playing = true; var t = ++P.token; unlockAudio(); setPlayUI(); keepAwake();
+  try { await loop(t); } catch (e) { console.error(e); }
+  if (t === P.token) { P.playing = false; setPlayUI(); }
+}
+function pause() { P.token++; P.playing = false; stopAudio(); setPlayUI(); savePos(); }
+async function loop(t) {
+  var empties = 0;
+  while (t === P.token) {
+    var m = P.model;
+    while (P.idx < m.units.length) {
+      var u = m.units[P.idx];
+      markCurrent();
+      if (u.ok) {
+        await speakUnit(u, t);
+        if (t !== P.token) return;
+        await sleep(u.gap || S.gap, t);
+        if (t !== P.token) return;
+      }
+      P.idx++; if (P.idx % 4 === 0) savePos();
+    }
+    if (P.page >= DOC.pages) { toast('Reached the end.'); P.token++; return; }
+    if (!S.auto) { toast('Finished this page.'); P.token++; return; }
+    empties = m.units.some(function (u) { return u.ok; }) ? 0 : empties + 1;
+    if (empties >= 6) { toast('Several pages in a row have no text. They may be scans.', 5000); P.token++; return; }
+    await showPage(P.page + 1, 0);
+    if (t !== P.token) return;
+  }
+}
+function step(dir) {
+  var m = P.model; if (!m) return;
+  var ni = P.idx + dir;
+  if (ni < 0) { if (P.page > 1) { jumpEnd(P.page - 1); } return; }
+  if (ni >= m.units.length) { if (P.page < DOC.pages) jump(P.page + 1, 0); return; }
+  var was = P.playing; P.token++; P.playing = false; stopAudio(); P.idx = ni; markCurrent();
+  if (was) play(); else setPlayUI();
+}
+async function jumpEnd(n) { var m = await getModel(n); jump(n, Math.max(0, m.units.length - 1)); }
+
+var wake = null;
+async function keepAwake() { try { if (S.lock) { if (wake) { wake.release(); wake = null; } return; } if (navigator.wakeLock && !wake) { wake = await navigator.wakeLock.request('screen'); wake.addEventListener('release', function () { wake = null; }); } } catch (e) { wake = null; } }
+
+/* ---------- opening documents ---------- */
+function showLoading(on, msg, pct) { el.loading.hidden = !on; if (msg) el.loadMsg.textContent = msg; el.loadBar.style.width = (pct || 0) + '%'; }
+
+function resetDoc() { P.token++; P.playing = false; stopAudio(); cache.clear(); outlineItems = []; }
+
+async function openGita(startPage) {
+  resetDoc();
+  DOC = { kind: 'gita', title: 'Bhagavad Gita', pages: window.GITA.length, key: 'gita', legacy: false };
+  setTabs(false); renderDocCard(); renderToc();
+  var pos = store.get('pos.gita', null);
+  await showPage(startPage || (pos && pos.p) || 1, startPage ? 0 : (pos && pos.i) || 0);
+  setPlayUI();
+}
+async function openText(text) {
+  resetDoc();
+  DOC = { kind: 'text', title: 'Pasted text', pages: 1, key: 'text', legacy: false, text: text };
+  setTabs(false); renderDocCard(); renderToc();
+  await showPage(1, 0); setPlayUI();
+}
+function setTabs(pdf) {
+  el.tabs.style.display = pdf ? '' : 'none';
+  if (!pdf) { P.view = 'text'; el.tabText.setAttribute('aria-selected', 'true'); el.tabPage.setAttribute('aria-selected', 'false'); }
+}
+function setView(v) {
+  P.view = v; el.tabText.setAttribute('aria-selected', v === 'text'); el.tabPage.setAttribute('aria-selected', v === 'page');
+  el.textView.hidden = v !== 'text'; el.pageView.hidden = v !== 'page';
+  if (v === 'page') renderPageView(); else markCurrent();
+  store.set('view', v);
+}
+
+async function openPdf(file) {
+  if (!window.pdfjsLib) { toast('The PDF engine did not load. Check your connection and reload.', 6000); return; }
+  resetDoc(); showLoading(true, 'Opening ' + file.name + '…', 4);
+  try {
+    var buf = await file.arrayBuffer();
+    var task = pdfjsLib.getDocument({ data: new Uint8Array(buf), isEvalSupported: false });
+    task.onProgress = function (p) { if (p && p.total) showLoading(true, 'Reading file…', Math.min(60, 60 * p.loaded / p.total)); };
+    var pdf = await task.promise;
+    var title = file.name.replace(/\.pdf$/i, '').replace(/[_]+/g, ' ');
+    DOC = { kind: 'pdf', title: title, pages: pdf.numPages, pdf: pdf, key: file.name + '|' + file.size + '|' + pdf.numPages, legacy: false, name: file.name };
+    // sample the first pages to see whether they use a legacy (non-Unicode) Devanagari font
+    showLoading(true, 'Checking the text encoding…', 70);
+    var sample = '', mode = S.repair;
+    for (var i = 1; i <= Math.min(10, pdf.numPages) && sample.length < 3000; i++) {
+      var pg = await pdf.getPage(i), tc = await pg.getTextContent();
+      sample += tc.items.map(function (x) { return x.str || ''; }).join(' ') + '\n'; pg.cleanup();
+    }
+    DOC.legacy = mode === 'on' ? true : mode === 'off' ? false : LegacyDevanagari.looksLegacy(sample);
+    DOC.noText = sample.replace(/\s/g, '').length < 30;
+    try {
+      var info = await pdf.getMetadata(); var t = info && info.info && info.info.Title;
+      if (t && t.trim() && !/^(untitled|microsoft word)/i.test(t) && devRatio(t) < 0.01 && t.length > 3) DOC.title = t.trim();
+    } catch (e) {}
+    setTabs(true); renderDocCard(); renderToc();
+    var saved = store.get('pos.' + DOC.key, null);
+    showLoading(true, 'Preparing page ' + ((saved && saved.p) || 1) + '…', 90);
+    await showPage(saved && saved.p > 1 ? saved.p : 1, saved ? saved.i : 0);
+    if (saved && saved.p > 1) toast('Picked up where you left off, page ' + fmt(saved.p) + '.');
+    else if (DOC.noText) toast('This PDF seems to be scanned images. Text reading needs a text layer.', 6000);
+    else if (DOC.legacy) toast('Old Devanagari font detected. Repairing text as it is read.', 4500);
+    loadOutline(pdf, DOC);
+  } catch (e) {
+    console.error(e);
+    toast(e && e.name === 'PasswordException' ? 'This PDF is password protected.' : 'Could not open that file. Is it a valid PDF?', 5000);
+  } finally { showLoading(false); setPlayUI(); }
+}
+
+async function loadOutline(pdf, doc) {
+  try {
+    var ol = await pdf.getOutline(); if (!ol || doc !== DOC) return;
+    var flat = [];
+    (function walk(items, d) { items.forEach(function (it) { if (flat.length > 400) return; flat.push({ title: (doc.legacy ? LegacyDevanagari.convert(it.title || '') : (it.title || '')).trim() || 'Untitled', dest: it.dest, depth: Math.min(d, 2) }); if (it.items && d < 2) walk(it.items, d + 1); }); })(ol, 0);
+    outlineItems = flat; renderToc();
+  } catch (e) {}
+}
+async function gotoOutline(i) {
+  var o = outlineItems[i]; if (!o || !DOC.pdf) return;
+  try {
+    var dest = typeof o.dest === 'string' ? await DOC.pdf.getDestination(o.dest) : o.dest;
+    if (!dest) return;
+    var idx = typeof dest[0] === 'object' ? await DOC.pdf.getPageIndex(dest[0]) : dest[0];
+    jump(idx + 1, 0); closeRail();
+  } catch (e) { toast('Could not jump to that bookmark.'); }
+}
+
+/* ---------- settings ---------- */
+function openPanel(kind) {
+  if (kind === 'paste') {
+    el.panelTitle.textContent = 'Paste text to read';
+    el.panelBody.innerHTML = '<div class="group paste-box"><div class="row"><label for="pasteTa">Text</label><textarea id="pasteTa" lang="hi" placeholder="यहाँ हिन्दी, संस्कृत या English text चिपकाएँ…"></textarea><span class="hint">Paragraphs are separated by a blank line.</span></div><button class="btn primary" id="pasteGo" type="button">Read this aloud</button></div>';
+    $('#pasteGo').onclick = function () { var t = $('#pasteTa').value.trim(); if (!t) return toast('Paste some text first.'); closePanel(); openText(t).then(play); };
+  } else buildSettings();
+  el.panel.classList.add('open'); el.scrim.classList.add('open'); el.panel.setAttribute('aria-hidden', 'false'); setNav('settings'); pushSheet();
+  setTimeout(function () { var f = el.panel.querySelector('textarea,select,button.seg'); }, 0);
+}
+var sheetPushed = false, narrow = window.matchMedia ? matchMedia('(max-width: 860px)') : { matches: false };
+function pushSheet() { if (narrow.matches && !sheetPushed) { try { history.pushState({ vsheet: 1 }, ''); sheetPushed = true; } catch (e) {} } }
+function popSheet() { if (sheetPushed) { sheetPushed = false; try { history.back(); } catch (e) {} } }
+function setNav(cur) { Array.prototype.forEach.call(el.tabbar.querySelectorAll('button'), function (b) { b.setAttribute('aria-current', b.dataset.go === cur ? 'page' : 'false'); }); }
+function closePanel(fromPop) {
+  el.panel.classList.remove('open'); el.panel.setAttribute('aria-hidden', 'true');
+  if (!el.rail.classList.contains('open')) el.scrim.classList.remove('open');
+  setNav(el.rail.classList.contains('open') ? 'library' : 'reader'); if (fromPop !== true) popSheet();
+}
+function openRail() { closePanel(true); el.rail.classList.add('open'); el.scrim.classList.add('open'); setNav('library'); pushSheet(); }
+function seg(id, opts, cur) { return '<div class="seg" id="' + id + '" role="group">' + opts.map(function (o) { return '<button type="button" data-v="' + o[0] + '" aria-pressed="' + (String(cur) === String(o[0])) + '">' + o[1] + '</button>'; }).join('') + '</div>'; }
+function voiceOptions(kind, cur) {
+  var list = voiceList(kind);
+  if (!list.length) return '<option value="">No ' + (kind === 'en' ? 'English' : 'Hindi') + ' voice on this device</option>';
+  var best = list[0];
+  return list.map(function (v) { var nat = vscore(v) >= 40; return '<option value="' + esc(v.voiceURI) + '"' + ((cur ? (v.voiceURI === cur || v.name === cur) : v === best) ? ' selected' : '') + '>' + esc(v.name) + ' (' + v.lang + ')' + (nat ? ' ★' : '') + '</option>'; }).join('');
+}
+function swatchHTML() {
+  var th = resolvedTheme();
+  return Object.keys(PALS).map(function (k) {
+    var p = PALS[k][th];
+    return '<button type="button" class="swatch" data-pal="' + k + '" aria-pressed="' + (S.palette === k) + '"><span class="prev" aria-hidden="true"><i style="background:' + p.bg + '"></i><i style="background:' + p.accent + '"></i><i style="background:' + p.mark + '"></i></span><b>' + PALS[k].name + '</b><span class="d">' + PALS[k].desc + '</span></button>';
+  }).join('');
+}
+function buildSettings() {
+  el.panelTitle.textContent = 'Voice and reading';
+  var eng = S.engine || 'browser', hasHi = voiceList('hi').length > 0;
+  var gHi = ['hi-IN-Neural2-A', 'hi-IN-Neural2-B', 'hi-IN-Neural2-C', 'hi-IN-Neural2-D', 'hi-IN-Wavenet-A', 'hi-IN-Wavenet-B', 'hi-IN-Wavenet-C', 'hi-IN-Wavenet-D'];
+  var gEn = ['en-IN-Neural2-A', 'en-IN-Neural2-B', 'en-IN-Neural2-C', 'en-IN-Neural2-D'];
+  var srcOpts = [['browser', 'This device']]; if (PATHS.pack) srcOpts.push(['pack', 'Natural pack']); srcOpts.push(['google', 'Google Cloud']);
+  var h = '';
+  if (PATHS.pack && eng === 'browser' && voiceIsBasic()) h += '<div class="group"><div class="card"><div class="row"><b>Your device voice is basic.</b><span class="hint">Choose <b>Natural pack</b> below for a human-sounding neural voice that runs on your device and works offline. In Microsoft Edge you can also pick an “Online (Natural)” device voice.</span></div></div></div>';
+  h += '<div class="group"><h3>Voice</h3>' +
+    '<div class="row"><span class="lab">Voice source</span>' + seg('segEngine', srcOpts, eng) + '</div>' +
+    '<div id="engBrowser"><div class="row"><label for="vHi">Hindi and Sanskrit voice</label><select class="select" id="vHi">' + voiceOptions('hi', S.voiceHi) + '</select>' +
+    (hasHi ? '<span class="hint">Voices marked ★ are neural. In Edge, look for “Online (Natural)” voices such as Swara or Madhur.</span>' :
+      '<span class="hint">No Hindi voice is installed on this device. Use the Natural pack, or add one: Windows Settings, Time &amp; language, Speech. Android Settings, Text-to-speech, Google. iPhone Settings, Accessibility, Spoken Content.</span>') + '</div>' +
+    '<div class="row"><label for="vEn">English voice</label><select class="select" id="vEn">' + voiceOptions('en', S.voiceEn) + '</select></div></div>' +
+    '<div id="engPack"><div class="row"><label for="pHi">Hindi and Sanskrit voice</label><select class="select" id="pHi"><option>Loading voices…</option></select></div>' +
+    '<div class="row"><label for="pEn">English voice</label><select class="select" id="pEn"><option>Loading voices…</option></select></div>' +
+    '<div class="card"><div id="packStatus" role="status">Checking…</div><div class="meter" aria-hidden="true"><i id="packMeter"></i></div></div>' +
+    '<div class="btn-row"><button class="btn primary" id="packInstall" type="button">Download for offline use</button><button class="btn" id="packRemove" type="button">Remove download</button></div>' +
+    '<span class="hint">A neural voice that runs on this device. The first sentence may take a few seconds while it loads. After the one-time download it works without internet.</span></div>' +
+    '<div id="engGoogle"><div class="row"><label for="gKey">Google Cloud API key</label><input type="password" id="gKey" autocomplete="off" value="' + esc(S.gKey) + '" placeholder="Paste a Text-to-Speech API key"><span class="hint">Stored only in this browser. Needs the Cloud Text-to-Speech API enabled.</span></div>' +
+    '<div class="row"><label for="gHi">Hindi and Sanskrit voice</label><select class="select" id="gHi">' + gHi.map(function (v) { return '<option' + (v === S.gVoiceHi ? ' selected' : '') + '>' + v + '</option>'; }).join('') + '</select></div>' +
+    '<div class="row"><label for="gEn">English voice</label><select class="select" id="gEn">' + gEn.map(function (v) { return '<option' + (v === S.gVoiceEn ? ' selected' : '') + '>' + v + '</option>'; }).join('') + '</select></div></div>' +
+    '<button class="btn" id="testV" type="button">Play a sample</button></div>';
+  h += '<div class="group"><h3>Appearance</h3><div class="row"><span class="lab">Mode</span>' + seg('segMode', [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']], S.mode) + '</div>' +
+    '<div class="row"><span class="lab">Interface style</span>' + seg('segUi', [['auto', 'Auto'], ['ios', 'iPhone'], ['android', 'Android'], ['desktop', 'Desktop']], S.ui) + '<span class="hint">Auto matches your device. Change it to preview the other styles.</span></div>' +
+    '<div class="row"><span class="lab" id="palLab">Colour theme</span><div class="swatches" id="swatches" role="group" aria-labelledby="palLab">' + swatchHTML() + '</div></div></div>';
+  h += '<div class="group"><h3>Speech</h3>' +
+    '<div class="row"><label for="rate">Speed <span class="val" id="rateV">' + S.rate.toFixed(2) + '×</span></label><input type="range" id="rate" min="0.5" max="1.6" step="0.05" value="' + S.rate + '"><span class="hint">Around 0.85 to 0.95 suits scripture best.</span></div>' +
+    '<div class="row"><label for="gap">Pause between lines <span class="val" id="gapV">' + S.gap + ' ms</span></label><input type="range" id="gap" min="0" max="1500" step="50" value="' + S.gap + '"></div>' +
+    '<div class="row"><label class="toggle"><input type="checkbox" id="autoAdv2"' + (S.auto ? ' checked' : '') + '>Continue to the next page automatically</label></div>' +
+    '<div class="row"><label class="toggle"><input type="checkbox" id="lockPlay"' + (S.lock ? ' checked' : '') + '>Keep playing when the screen is locked</label><span class="hint" id="lockHint"></span></div>' +
+    '<div class="row"><span class="lab">Language</span>' + seg('segLang', [['auto', 'Auto'], ['hi', 'Hindi'], ['sa', 'Sanskrit'], ['en', 'English']], S.lang) + '<span class="hint">Auto reads Devanagari with the Hindi voice and Latin text with the English voice.</span></div></div>';
+  h += '<div class="group"><h3>Reading</h3>' +
+    '<div class="row"><span class="lab">Old-font repair</span>' + seg('segRepair', [['auto', 'Auto'], ['on', 'Always'], ['off', 'Never']], S.repair) + '<span class="hint">Many Hindi books (Gita Press, for example) use pre-Unicode fonts that extract as symbols. Repair turns them into real Devanagari before speaking. Applies when you open a PDF.</span></div>' +
+    '<div class="row"><label for="fsz">Text size <span class="val" id="fszV">' + S.font.toFixed(2) + ' rem</span></label><input type="range" id="fsz" min="1" max="2.4" step="0.05" value="' + S.font + '"></div></div>';
+  h += '<div class="group"><h3>Shortcuts</h3><div class="row hint">Space play or pause · ← → previous or next line · PageUp PageDown change page · [ ] speed</div></div>';
+  el.panelBody.innerHTML = h;
+  function showEng() { S.engine = S.engine || 'browser'; $('#engBrowser').style.display = S.engine === 'browser' ? '' : 'none'; $('#engPack').style.display = S.engine === 'pack' ? '' : 'none'; $('#engGoogle').style.display = S.engine === 'google' ? '' : 'none'; if (S.engine === 'pack') initPackUI(); }
+  showEng();
+  function bindSeg(id, key, cb) { $(id).addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; S[key] = b.dataset.v; save(key); Array.prototype.forEach.call($(id).children, function (x) { x.setAttribute('aria-pressed', x === b); }); if (cb) cb(); }); }
+  bindSeg('#segEngine', 'engine', function () { showEng(); checkVoiceQuality(); }); bindSeg('#segLang', 'lang');
+  bindSeg('#segUi', 'ui', applyPlatform);
+  bindSeg('#segMode', 'mode', function () { applyTheme(); $('#swatches').innerHTML = swatchHTML(); });
+  $('#swatches').addEventListener('click', function (e) { var b = e.target.closest('.swatch'); if (!b) return; S.palette = b.dataset.pal; save('palette'); applyTheme(); $('#swatches').innerHTML = swatchHTML(); });
+  bindSeg('#segRepair', 'repair', function () { if (DOC && DOC.kind === 'pdf') toast('Repair setting changes apply the next time you open the PDF.'); });
+  function lockHint() { var h = $('#lockHint'), pk = (S.engine || 'browser') !== 'browser'; h.textContent = S.lock ? (pk ? 'On. The screen may turn off and reading continues. Use the lock-screen controls to pause or skip.' : 'On, but your device voice usually stops when the phone locks. Switch Voice source to Natural pack for locked-screen playback.') : 'Off. The screen stays awake while reading, which works with every voice.'; }
+  $('#lockPlay').onchange = function (e) { S.lock = e.target.checked; save('lock'); if (S.lock && wake) { try { wake.release(); } catch (x) {} wake = null; } else if (P.playing) keepAwake(); lockHint(); };
+  lockHint();
+  $('#autoAdv2').onchange = function (e) { S.auto = e.target.checked; save('auto'); el.autoAdv.checked = S.auto; };
+  $('#vHi').onchange = function (e) { S.voiceHi = e.target.value; save('voiceHi'); };
+  $('#vEn').onchange = function (e) { S.voiceEn = e.target.value; save('voiceEn'); };
+  $('#gHi').onchange = function (e) { S.gVoiceHi = e.target.value; save('gVoiceHi'); };
+  $('#gEn').onchange = function (e) { S.gVoiceEn = e.target.value; save('gVoiceEn'); };
+  $('#gKey').onchange = function (e) { S.gKey = e.target.value.trim(); save('gKey'); };
+  $('#rate').oninput = function (e) { S.rate = +e.target.value; $('#rateV').textContent = S.rate.toFixed(2) + '×'; save('rate'); syncRate(); };
+  $('#gap').oninput = function (e) { S.gap = +e.target.value; $('#gapV').textContent = S.gap + ' ms'; save('gap'); };
+  $('#fsz').oninput = function (e) { S.font = +e.target.value; $('#fszV').textContent = S.font.toFixed(2) + ' rem'; save('font'); applyFont(); };
+  $('#testV').onclick = async function () {
+    var was = P.playing; if (was) pause();
+    var t = ++P.token; stopAudio();
+    var sample = [{ speech: 'नमस्ते। यह मेरी आवाज़ है, जो आपके लिए पुस्तक पढ़ेगी।', k: 'hi' }, { speech: 'धर्मक्षेत्रे कुरुक्षेत्रे समवेता युयुत्सवः।', k: 'sa' }, { speech: 'And this is how English text will sound.', k: 'en' }];
+    for (var i = 0; i < sample.length; i++) { if (t !== P.token) return; await speakUnit(sample[i], t); }
+  };
+}
+function initPackUI() {
+  var st = $('#packStatus'), meter = $('#packMeter'), bi = $('#packInstall'), br = $('#packRemove');
+  function fill(sel, kind, cur, key) {
+    var ids = Pack.list(kind); sel.innerHTML = ids.map(function (id) { return '<option value="' + esc(id) + '"' + (id === cur ? ' selected' : '') + '>' + esc(Pack.label(id)) + '</option>'; }).join('') || '<option value="">No voice available</option>';
+    sel.onchange = function () { S[key] = sel.value; save(key); refresh(); };
+  }
+  async function refresh() {
+    try {
+      var a = await Pack.installed(S.pVoiceHi), b = await Pack.installed(S.pVoiceEn), e = await Pack.engineReady();
+      st.textContent = (a && b && e) ? 'Downloaded. Works offline.' : (Pack.origin() === 'voices/' ? 'Included with this app. It loads the first time you play.' : 'Not downloaded yet. It will download when you first play, or tap the button below.');
+    } catch (x) { st.textContent = ''; }
+  }
+  Pack.catalog().then(function () {
+    Pack.defaults(); save('pVoiceHi'); save('pVoiceEn');
+    fill($('#pHi'), 'hi', S.pVoiceHi, 'pVoiceHi'); fill($('#pEn'), 'en', S.pVoiceEn, 'pVoiceEn'); refresh();
+  }).catch(function (e) { st.textContent = e.message; $('#pHi').innerHTML = $('#pEn').innerHTML = '<option value="">Unavailable</option>'; });
+  bi.onclick = async function () {
+    bi.disabled = true; meter.style.width = '0%';
+    try { await Pack.install([S.pVoiceHi, S.pVoiceEn].filter(Boolean), function (p, m) { meter.style.width = Math.round(p * 100) + '%'; st.textContent = m; }); toast('Natural voice downloaded.'); }
+    catch (e) { st.textContent = 'Download failed: ' + e.message; }
+    bi.disabled = false; setTimeout(function () { meter.style.width = '0%'; refresh(); }, 1200);
+  };
+  br.onclick = async function () { await Pack.remove(); meter.style.width = '0%'; toast('Downloaded voice removed.'); refresh(); };
+}
+function syncRate() { el.rateSel.value = String(closestRate(S.rate)); }
+function closestRate(r) { var a = [0.7, 0.8, 0.9, 1, 1.1, 1.25, 1.5], b = a[0]; a.forEach(function (x) { if (Math.abs(x - r) < Math.abs(b - r)) b = x; }); return b; }
+function closeRail(fromPop) { el.rail.classList.remove('open'); if (!el.panel.classList.contains('open')) el.scrim.classList.remove('open'); setNav(el.panel.classList.contains('open') ? 'settings' : 'reader'); if (fromPop !== true) popSheet(); }
+
+/* ---------- events ---------- */
+el.openBtn.onclick = function () { el.fileInput.click(); };
+el.fileInput.onchange = function () { var f = el.fileInput.files[0]; if (f) { openPdf(f); closeRail(); } el.fileInput.value = ''; };
+el.libGita.onclick = function () { openGita(); closeRail(); };
+el.libPaste.onclick = function () { closeRail(); openPanel('paste'); };
+el.menuBtn.onclick = openRail;
+el.scrim.onclick = function () { closePanel(); closeRail(); };
+window.addEventListener('popstate', function () { if (sheetPushed) { sheetPushed = false; closePanel(true); closeRail(true); } });
+el.panelClose.onclick = function () { closePanel(); };
+el.setBtn.onclick = function () { openPanel('settings'); };
+el.playBtn.onclick = function () { P.playing ? pause() : play(); };
+el.prevU.onclick = function () { step(-1); };
+el.nextU.onclick = function () { step(1); };
+el.pgPrev.onclick = function () { jump(P.page - 1, 0); };
+el.pgNext.onclick = function () { jump(P.page + 1, 0); };
+el.pgInput.onchange = function () { var n = parseInt(el.pgInput.value.replace(/[^\d]/g, ''), 10); if (n) jump(n, 0); else updateNow(); };
+el.pgInput.onfocus = function () { el.pgInput.select(); };
+el.seek.oninput = function () { el.pgInput.value = el.seek.value; };
+el.seek.onchange = function () { jump(+el.seek.value, 0); };
+el.rateSel.onchange = function () { S.rate = +el.rateSel.value; save('rate'); if (P.playing) { var i = P.idx; P.token++; P.playing = false; stopAudio(); P.idx = i; play(); } };
+el.autoAdv.checked = S.auto; el.autoAdv.onchange = function () { S.auto = el.autoAdv.checked; save('auto'); var b = $('#autoAdv2'); if (b) b.checked = S.auto; };
+el.tabbar.addEventListener('click', function (e) {
+  var b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.go === 'library') { el.rail.classList.contains('open') ? closeRail() : openRail(); }
+  else if (b.dataset.go === 'settings') { el.panel.classList.contains('open') ? closePanel() : (closeRail(true), openPanel('settings')); }
+  else { closePanel(); closeRail(); }
+});
+function dragSheet(handle, sheet, close) {
+  var y0 = null, dy = 0;
+  handle.addEventListener('pointerdown', function (e) { y0 = e.clientY; dy = 0; try { handle.setPointerCapture(e.pointerId); } catch (x) {} sheet.style.transition = 'none'; });
+  handle.addEventListener('pointermove', function (e) { if (y0 === null) return; dy = Math.max(0, e.clientY - y0); sheet.style.transform = 'translateY(' + dy + 'px)'; });
+  function end() { if (y0 === null) return; y0 = null; sheet.style.transition = ''; sheet.style.transform = ''; if (dy > 90) close(); }
+  handle.addEventListener('pointerup', end); handle.addEventListener('pointercancel', end);
+}
+dragSheet(el.grabRail, el.rail, function () { closeRail(); }); dragSheet(el.grabPanel, el.panel, function () { closePanel(); });
+el.fontUp.onclick = function () { S.font = Math.min(2.4, +(S.font + 0.1).toFixed(2)); save('font'); applyFont(); };
+el.fontDown.onclick = function () { S.font = Math.max(1, +(S.font - 0.1).toFixed(2)); save('font'); applyFont(); };
+el.tabText.onclick = function () { setView('text'); };
+el.tabPage.onclick = function () { setView('page'); };
+el.toc.addEventListener('click', function (e) {
+  var b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.p) { jump(+b.dataset.p, 0, true); closeRail(); } else if (b.dataset.o) gotoOutline(+b.dataset.o);
+});
+function playFrom(i) { var was = P.playing; P.token++; P.playing = false; stopAudio(); P.idx = i; markCurrent(); play(); }
+el.textView.addEventListener('click', function (e) { var s = e.target.closest('.u'); if (!s || s.classList.contains('silent')) return; playFrom(+s.dataset.i); });
+el.pageView.addEventListener('click', function (e) {
+  var d = e.target.closest('.ov'); if (!d) return;
+  var l = +d.dataset.l, m = P.model; for (var i = 0; i < m.units.length; i++) if (m.units[i].lines.indexOf(l) >= 0) { if (m.units[i].ok) playFrom(i); return; }
+});
+var dragN = 0;
+window.addEventListener('dragenter', function (e) { e.preventDefault(); dragN++; document.body.classList.add('dragging'); });
+window.addEventListener('dragover', function (e) { e.preventDefault(); });
+window.addEventListener('dragleave', function () { dragN = Math.max(0, dragN - 1); if (!dragN) document.body.classList.remove('dragging'); });
+window.addEventListener('drop', function (e) {
+  e.preventDefault(); dragN = 0; document.body.classList.remove('dragging');
+  var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+  if (f && (/pdf$/i.test(f.type) || /\.pdf$/i.test(f.name))) openPdf(f); else if (f) toast('That is not a PDF file.');
+});
+window.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape' && (el.panel.classList.contains('open') || el.rail.classList.contains('open'))) { closePanel(); closeRail(); return; }
+  var tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === 'Escape') { closePanel(); closeRail(); return; }
+  if (e.key === ' ' && tag !== 'button') { e.preventDefault(); P.playing ? pause() : play(); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); step(1); } else if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
+  else if (e.key === 'PageDown') { e.preventDefault(); jump(P.page + 1, 0); } else if (e.key === 'PageUp') { e.preventDefault(); jump(P.page - 1, 0); }
+  else if (e.key === ']' || e.key === '[') { var a = [0.7, 0.8, 0.9, 1, 1.1, 1.25, 1.5], i = a.indexOf(closestRate(S.rate)) + (e.key === ']' ? 1 : -1); S.rate = a[Math.max(0, Math.min(a.length - 1, i))]; save('rate'); syncRate(); toast('Speed ' + S.rate + '×', 1200); if (P.playing) { var k = P.idx; P.token++; P.playing = false; stopAudio(); P.idx = k; play(); } }
+});
+window.addEventListener('beforeunload', savePos);
+window.addEventListener('resize', (function () { var t; return function () { clearTimeout(t); t = setTimeout(function () { if (P.view === 'page') renderPageView(); }, 250); }; })());
+if ('mediaSession' in navigator) {
+  try {
+    navigator.mediaSession.metadata = new MediaMetadata({ title: 'Vachak Reader', artist: 'Reading aloud' });
+    navigator.mediaSession.setActionHandler('play', play); navigator.mediaSession.setActionHandler('pause', pause);
+    navigator.mediaSession.setActionHandler('previoustrack', function () { step(-1); }); navigator.mediaSession.setActionHandler('nexttrack', function () { step(1); });
+  } catch (e) {}
+}
+
+/* ---------- boot ---------- */
+applyPlatform(); applyTheme(); applyFont(); syncRate();
+loadVoices(); checkVoiceQuality(); el.voiceTip.onclick = function () { openPanel('settings'); };
+if (window.speechSynthesis) speechSynthesis.onvoiceschanged = function () { loadVoices(); checkVoiceQuality(); if (el.panel.classList.contains('open') && el.panelTitle.textContent === 'Voice and reading') buildSettings(); };
+if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = PATHS.pdfWorker;
+el.modeBtn.onclick = function () { S.mode = resolvedTheme() === 'dark' ? 'light' : 'dark'; save('mode'); applyTheme(); };
+if (PATHS.pack && S.engine == null) Pack.peekLocal().then(function (ok) { if (ok && S.engine == null) { S.engine = 'pack'; checkVoiceQuality(); toast('Natural voice is on. It loads when you press play.', 4500); } });
+
+/* ---------- install as an app ---------- */
+var deferredInstall = null;
+function isStandalone() { return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true; }
+var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+if (PATHS.sw && !isStandalone()) {
+  if (isIOS) { el.installBtn.hidden = false; el.installTxt.textContent = 'Add to Home Screen'; }
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferredInstall = e; el.installBtn.hidden = false; el.installTxt.textContent = 'Install app'; });
+}
+el.installBtn.onclick = async function () {
+  if (deferredInstall) { deferredInstall.prompt(); try { await deferredInstall.userChoice; } catch (e) {} deferredInstall = null; el.installBtn.hidden = true; }
+  else if (isIOS) toast('Tap the Share button, then “Add to Home Screen”.', 6000);
+  else toast('Use your browser menu and choose Install app.', 5000);
+};
+window.addEventListener('appinstalled', function () { el.installBtn.hidden = true; toast('Vachak is installed.'); });
+if (PATHS.sw && 'serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+  navigator.serviceWorker.register('sw.js').then(function (reg) {
+    reg.addEventListener('updatefound', function () { var w = reg.installing; if (w) w.addEventListener('statechange', function () { if (w.state === 'installed' && navigator.serviceWorker.controller) toast('A new version is ready. Reload to use it.', 7000); }); });
+  }).catch(function () {});
+}
+if ('launchQueue' in window) launchQueue.setConsumer(async function (p) { if (p && p.files && p.files.length) { var f = await p.files[0].getFile(); openPdf(f); } });
+if (store.get('view', 'text') === 'page') P.view = 'text';
+openGita();
+window.__vachak = { Pack: Pack, P: P, S: S, play: play, pause: pause, jump: jump, openText: openText, get DOC() { return DOC; }, buildUnits: buildUnits, openPdf: openPdf };
+})();
+</script>
