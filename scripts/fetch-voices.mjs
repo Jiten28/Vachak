@@ -9,7 +9,9 @@ const HF = 'https://huggingface.co/rhasspy/piper-voices/resolve/main/';
 const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', 'voices');
 const exists = (p) => access(p).then(() => true, () => false);
 
-const all = await (await fetch(HF + 'voices.json')).json();
+const res0 = await fetch(HF + 'voices.json');
+if (!res0.ok) throw new Error('voices.json -> ' + res0.status);
+const all = await res0.json();
 const ok = (k) => all[k] && !['x_low', 'low'].includes(all[k].quality);
 let want = (process.env.VOICES || '').split(',').map((s) => s.trim()).filter(Boolean);
 if (!want.length) {
@@ -28,6 +30,7 @@ for (const id of want) {
   catalog[id] = v;
   for (const rel of Object.keys(v.files)) {
     if (!/\.(onnx|onnx\.json)$/.test(rel)) continue;
+    if (!/^[A-Za-z0-9_\-]+(\/[A-Za-z0-9_\-]+)*\.onnx(\.json)?$/.test(rel)) throw new Error('Unsafe file path in voice list: ' + rel);
     const dest = join(OUT, rel);
     if (await exists(dest)) { console.log('have', rel); continue; }
     console.log('get ', rel);

@@ -25,3 +25,9 @@ Edit `src/app.src.html`, then `python3 src/palettes.py && python3 src/build.py` 
 - iOS Safari pauses audio when the screen locks unless the app is installed to the Home Screen.
 - Check the licence of each Piper voice you ship (see `voices/README.md`).
 - Libraries: PDF.js (Apache-2.0), piper-tts-web / onnxruntime-web (MIT).
+
+## Security notes
+- A strict Content-Security-Policy (script hashes, no `eval`, no third-party scripts) is embedded in `index.html` by `src/build.py`; the page also refuses to render inside a frame.
+- PDFs are parsed with `isEvalSupported: false` (mitigates CVE-2024-4367 in the bundled PDF.js 3.11) and every piece of PDF text is HTML-escaped before display.
+- Files never leave the device. Only the optional Google Cloud voice sends text (with your own API key) to Google; restrict that key to this site's address in Google Cloud.
+- Voice names and file paths from the voice list are validated before use.

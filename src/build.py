@@ -34,6 +34,18 @@ head='''<!doctype html>
 <body>
 '''
 pwa=head+fill(app,{'pdfWorker':'vendor/pdfjs/pdf.worker.min.js','pack':True,'sw':True})+'\n</body>\n</html>\n'
+import hashlib,base64
+def csp_for(html):
+    hs=[]
+    for m in re.finditer(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>',html,re.S):
+        hs.append("'sha256-"+base64.b64encode(hashlib.sha256(m.group(1).encode('utf-8')).digest()).decode()+"'")
+    pol=("default-src 'none'; script-src 'self' 'wasm-unsafe-eval' "+' '.join(hs)+"; worker-src 'self' blob:; "
+         "style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; media-src 'self' blob: data:; "
+         "connect-src 'self' blob: data: https://huggingface.co https://*.huggingface.co https://*.hf.co https://texttospeech.googleapis.com; "
+         "manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'")
+    return '<meta http-equiv="Content-Security-Policy" content="'+pol+'">\n<meta name="referrer" content="no-referrer">\n'
+pwa=pwa.replace('<script src="vendor/pdfjs/pdf.min.js"></script>','<script>if(window.top!==window.self){document.documentElement.innerHTML=""}</script>\n<script src="vendor/pdfjs/pdf.min.js"></script>',1)
+pwa=pwa.replace('<meta name="viewport"',csp_for(pwa)+'<meta name="viewport"',1)
 open(R+'index.html','w',encoding='utf-8').write(pwa)
 # ---------- artifact preview build (no service worker, no voice pack, CDN libraries) ----------
 art_head='''<title>Vachak Reader</title>

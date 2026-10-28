@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval' 'sha256-ZP6xc3GXpm2M+f5PkEEAv6ST1J66cnIsNtpGCh2M3CM=' 'sha256-sgjVgYxt3aT8n5krqAnjY6CWTZga11jhb+KqZZq8EmI=' 'sha256-9w5fzIUuIyzu59YFI8+LpyKIUCpJGxKC5nJrpLyAzHY=' 'sha256-uhxWAqQIHUMsGBKzjkvuJQAYPQVxH4wB4pUZNqXOv6Y=' 'sha256-9UVDeqtaTqKWfRpjCSSbM0b+0PsItROjdErbu78GvHY='; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self' blob: data: https://huggingface.co https://*.huggingface.co https://*.hf.co https://texttospeech.googleapis.com; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Vachak Reader</title>
 <meta name="description" content="Open a Hindi, Sanskrit or English PDF and listen to it in a natural voice. Works offline.">
@@ -16,6 +18,7 @@
 <link rel="stylesheet" href="vendor/fonts/fonts.css">
 <script>try{var _p=JSON.parse(localStorage.getItem('vachak.palette')||'null')||'mayur',_m=JSON.parse(localStorage.getItem('vachak.mode')||'null')||'system',_d=_m==='dark'||(_m==='system'&&matchMedia('(prefers-color-scheme: dark)').matches),_r=document.documentElement;_r.setAttribute('data-palette',_p);_r.setAttribute('data-theme',_d?'dark':'light')}catch(e){}
 (function(){var u=navigator.userAgent||'',p=navigator.platform||'',t=navigator.maxTouchPoints||0;window.__plat=function(o){if(o&&o!=='auto')return o;if(/iPhone|iPad|iPod/.test(u)||(p==='MacIntel'&&t>1))return'ios';if(/Android/.test(u))return'android';if(/Mac/.test(p))return'mac';if(/Win/.test(p))return'windows';return'desktop'};var o='auto';try{o=JSON.parse(localStorage.getItem('vachak.ui')||'"auto"')}catch(e){}document.documentElement.setAttribute('data-platform',window.__plat(o))})()</script>
+<script>if(window.top!==window.self){document.documentElement.innerHTML=""}</script>
 <script src="vendor/pdfjs/pdf.min.js"></script>
 <style>body{margin:0}[hidden]{display:none!important}</style>
 </head>
@@ -226,6 +229,23 @@ body.dragging .sheet { outline: 2px dashed var(--accent); outline-offset: -8px; 
   .topbar { gap: 8px; } .pager { margin-left: auto; }
 }
 @media (max-width: 860px) { .toast { bottom: auto; top: calc(10px + env(safe-area-inset-top, 0px)); transform: translate(-50%, -12px); } .toast.show { transform: translate(-50%, 0); } }
+@keyframes vspin { to { transform: rotate(360deg); } }
+.vbadge { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; border: 1px solid var(--line); background: var(--sheet); border-radius: 99px; padding: 5px 12px 5px 10px; font-size: .8rem; font-weight: 600; color: var(--ink-2); min-height: 32px; }
+.vbadge:hover { border-color: var(--ink-3); }
+.vbadge .dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--ink-3); box-sizing: border-box; }
+.vbadge[data-s="ready"] .dot { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.vbadge[data-s="loading"] { border-color: var(--accent); }
+.vbadge[data-s="loading"] .dot { width: 14px; height: 14px; background: transparent; border: 2px solid var(--accent-soft); border-top-color: var(--accent); animation: vspin .8s linear infinite; }
+.vbadge[data-s="error"] .dot { background: var(--danger); }
+.vbadge span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.play { position: relative; }
+.play.busy::after { content: ""; position: absolute; inset: -5px; border-radius: inherit; border: 3px solid transparent; border-top-color: var(--accent); border-right-color: var(--accent); animation: vspin .9s linear infinite; }
+.play.busy svg { opacity: .75; }
+.bufbar { height: 3px; border-radius: 3px; background: var(--line); overflow: hidden; position: relative; }
+.bufbar[hidden] { display: none; }
+.bufbar i { position: absolute; top: 0; bottom: 0; width: 38%; background: var(--accent); border-radius: 3px; animation: vslide 1.3s ease-in-out infinite; }
+@keyframes vslide { 0% { left: -40%; } 100% { left: 102%; } }
+@media (prefers-reduced-motion: reduce) { .vbadge .dot, .play.busy::after { animation-duration: 2.6s !important; } .bufbar i { animation-duration: 3s !important; } }
 @supports (height: 100dvh) { html, body { height: 100dvh; } }
 /* ---- platform flavours: the same app, shaped like the system it runs on ---- */
 :root { --r-ctl: 10px; --r-card: 12px; --r-sheet: 16px; }
@@ -355,6 +375,7 @@ body.dragging .sheet { outline: 2px dashed var(--accent); outline-offset: -8px; 
 
     <div class="dock" id="dock">
       <input class="seek" id="seek" type="range" min="1" max="1" value="1" aria-label="Seek to page">
+      <div class="bufbar" id="bufbar" hidden aria-hidden="true"><i></i></div>
       <div class="dock-row">
         <div class="transport">
           <button class="icon-btn" id="prevU" type="button" aria-label="Previous sentence"><svg class="i"><use href="#i-prev"/></svg></button>
@@ -362,6 +383,7 @@ body.dragging .sheet { outline: 2px dashed var(--accent); outline-offset: -8px; 
           <button class="icon-btn" id="nextU" type="button" aria-label="Next sentence"><svg class="i"><use href="#i-next"/></svg></button>
         </div>
         <div class="now"><div class="l1" id="nowTitle">—</div><div class="l2" id="nowSub">—</div></div>
+        <button class="vbadge" id="voiceBadge" type="button" data-s="idle" title="Voice in use. Tap to change."><span class="dot" aria-hidden="true"></span><span id="voiceBadgeTxt">Voice</span></button>
         <button class="btn quiet" id="voiceTip" type="button" hidden>Sounds robotic? Get a natural voice</button>
         <label class="field">Speed
           <select id="rateSel" aria-label="Speaking speed">
@@ -484,7 +506,7 @@ var $ = function (s) { return document.querySelector(s); };
 var el = {};
 ['app','rail','menuBtn','openBtn','fileInput','docCard','libGita','libPaste','toc','tocLabel','tabText','tabPage','tabs','pgPrev','pgNext','pgInput','pgTot',
  'fontDown','fontUp','setBtn','stage','textView','pageView','loading','loadMsg','loadBar','seek','prevU','playBtn','playIcon','nextU','nowTitle','nowSub',
- 'rateSel','autoAdv','voiceTip','tabbar','grabRail','grabPanel','installBtn','installTxt','modeBtn','modeIcon','scrim','panel','panelBody','panelTitle','panelClose','toast'].forEach(function (id) { el[id] = document.getElementById(id); });
+ 'rateSel','autoAdv','voiceBadge','voiceBadgeTxt','bufbar','voiceTip','tabbar','grabRail','grabPanel','installBtn','installTxt','modeBtn','modeIcon','scrim','panel','panelBody','panelTitle','panelClose','toast'].forEach(function (id) { el[id] = document.getElementById(id); });
 
 /* ---------- storage ---------- */
 var store = {
@@ -505,7 +527,7 @@ var toastT;
 function toast(msg, ms) { el.toast.textContent = msg; el.toast.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(function () { el.toast.classList.remove('show'); }, ms || 3200); }
 function fmt(n) { return Number(n).toLocaleString('en-IN'); }
 function sleep(ms, t) { return new Promise(function (r) { setTimeout(r, ms); }); }
-function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
 var DEV = /[ऄ-ॣ]/g;
 function devRatio(s) { var d = (s.match(DEV) || []).length, l = (s.match(/[A-Za-z]/g) || []).length; return d + l ? d / (d + l) : 0; }
 var PALS = {"mayur":{"name":"Mayur","desc":"Peacock teal","light":{"bg":"#DCE8E8","sheet":"#FBFEFD","accent":"#0A5563","mark":"#F4C95D"},"dark":{"bg":"#071316","sheet":"#12262B","accent":"#52C6D3","mark":"#64490B"}},"kesari":{"name":"Kesari","desc":"Saffron and maroon","light":{"bg":"#EBDCD2","sheet":"#FFFBF8","accent":"#9A2A1B","mark":"#FFC45E"},"dark":{"bg":"#160B09","sheet":"#2A1815","accent":"#F59A55","mark":"#6E450C"}},"neel":{"name":"Neel","desc":"Indigo and gold","light":{"bg":"#E0E2F0","sheet":"#FCFCFF","accent":"#3A3FA6","mark":"#F5CC5E"},"dark":{"bg":"#090B1D","sheet":"#151936","accent":"#A3ABFF","mark":"#614A0E"}},"tulsi":{"name":"Tulsi","desc":"Emerald and brass","light":{"bg":"#DAE8DE","sheet":"#FAFEFB","accent":"#0C6A43","mark":"#ECCB5C"},"dark":{"bg":"#06120C","sheet":"#11271C","accent":"#55D493","mark":"#604C0C"}},"gulab":{"name":"Gulab","desc":"Plum and rose","light":{"bg":"#EBDCE5","sheet":"#FFFBFD","accent":"#8A1D5B","mark":"#F8CA7B"},"dark":{"bg":"#130710","sheet":"#271323","accent":"#F59BC8","mark":"#694414"}},"kajal":{"name":"Kajal","desc":"Graphite and amber","light":{"bg":"#E2E2E0","sheet":"#FCFCFB","accent":"#2A2A33","mark":"#F2B544"},"dark":{"bg":"#0C0C0E","sheet":"#1B1B1E","accent":"#F3B845","mark":"#644A0C"}},"spasht":{"name":"Spasht","desc":"High contrast","light":{"bg":"#FFFFFF","sheet":"#FFFFFF","accent":"#0020C8","mark":"#FFE500"},"dark":{"bg":"#000000","sheet":"#000000","accent":"#FFE500","mark":"#FFE500"}}};
@@ -765,6 +787,42 @@ function markCurrent() {
 }
 
 var statusMsg = '';
+var VB = { st: 'idle', stage: '', t0: 0, tick: null, wait: false };
+var STAGE_TXT = { engine: 'Preparing the voice engine', voice: 'Loading the voice model', start: 'Warming up (first time only)', speak: 'Almost ready' };
+function activeVoiceName() {
+  if (S.engine === 'pack') { var id = S.pVoiceHi; return id ? Pack.label(id).split(' (')[0] : ''; }
+  if (S.engine === 'google') return S.gVoiceHi || '';
+  var v = S.voiceHi && window.speechSynthesis ? (speechSynthesis.getVoices() || []).filter(function (x) { return x.name === S.voiceHi; })[0] : null;
+  return v ? v.name : '';
+}
+function renderBadge() {
+  var eng = S.engine || 'browser', st = 'idle', txt;
+  if (eng === 'pack' && PATHS.pack) {
+    var nm = ''; try { nm = activeVoiceName(); } catch (e) {}
+    if (VB.st === 'loading') { st = 'loading'; txt = (STAGE_TXT[VB.stage] || 'Loading the natural voice') + '… ' + Math.max(0, Math.round((Date.now() - VB.t0) / 1000)) + 's'; }
+    else if (VB.st === 'error') { st = 'error'; txt = 'Natural voice failed. Tap to check'; }
+    else if (S.pVoiceHi && Pack.isWarm(S.pVoiceHi)) { st = 'ready'; txt = 'Natural voice ready' + (nm ? ' · ' + nm : ''); }
+    else { txt = 'Natural voice selected' + (nm ? ' · ' + nm : '') + ' · loads on play'; }
+  } else if (eng === 'google') { st = S.gKey ? 'ready' : 'error'; txt = S.gKey ? 'Google Cloud voice' : 'Google voice needs an API key'; }
+  else { var dn = ''; try { dn = activeVoiceName(); } catch (e) {} txt = 'Device voice' + (dn ? ' · ' + dn : ''); }
+  el.voiceBadge.setAttribute('data-s', st); el.voiceBadgeTxt.textContent = txt;
+  var busy = VB.wait || VB.st === 'loading';
+  el.playBtn.classList.toggle('busy', busy && P.playing); el.bufbar.hidden = !(busy && P.playing);
+  el.playBtn.setAttribute('aria-busy', busy && P.playing ? 'true' : 'false');
+}
+function setVBState(st, stg) {
+  VB.st = st; VB.stage = stg || '';
+  if (st === 'loading') { if (!VB.t0) VB.t0 = Date.now(); if (!VB.tick) VB.tick = setInterval(renderBadge, 1000); }
+  else { VB.t0 = 0; if (VB.tick) { clearInterval(VB.tick); VB.tick = null; } }
+  renderBadge();
+}
+function maybeWarm() {
+  if (S.engine !== 'pack' || !PATHS.pack) return;
+  if (navigator.connection && navigator.connection.saveData) return;
+  Pack.catalog().then(function () { Pack.defaults(); return Pack.installed(S.pVoiceHi).then(function (ok) { return ok || Pack.origin() === 'voices/'; }); })
+    .then(function (ok) { if (ok && S.pVoiceHi && !Pack.isWarm(S.pVoiceHi)) return Pack.warm(S.pVoiceHi); })
+    .catch(function () {}).then(renderBadge);
+}
 function setStatus(m) { statusMsg = m || ''; if (el.nowSub) updateNow(); }
 function updateNow() {
   var m = P.model, n = DOC ? DOC.pages : 1;
@@ -824,6 +882,7 @@ async function jump(n, idx, forcePlay) {
 function savePos() { if (DOC && DOC.key && DOC.kind !== 'text') store.set('pos.' + DOC.key, { p: P.page, i: P.idx }); }
 
 function setPlayUI() {
+  renderBadge();
   el.playIcon.innerHTML = '<use href="#' + (P.playing ? 'i-pause' : 'i-play') + '"/>';
   el.playBtn.setAttribute('aria-label', P.playing ? 'Pause' : 'Play'); el.playBtn.setAttribute('aria-pressed', P.playing ? 'true' : 'false');
   if ('mediaSession' in navigator) { try { navigator.mediaSession.playbackState = P.playing ? 'playing' : 'paused'; } catch (e) {} }
@@ -859,9 +918,11 @@ var Pack = (function () {
   var LOCAL = 'voices/', HF = 'https://huggingface.co/rhasspy/piper-voices/resolve/main/', CACHE = 'vachak-voices-v1';
   var VENDOR = ['vendor/piper/PhonemizeWebWorker.js', 'vendor/piper/OnnxWebWorker.js', 'vendor/piper/piper_phonemize.wasm', 'vendor/piper/piper_phonemize.data', 'vendor/piper/onnx/ort-wasm-simd-threaded.wasm'];
   var VENDOR_MB = [0.1, 15.6, 0.6, 18.1, 10.4];
+  var SAFE_ID = /^[a-z]{2,3}_[A-Za-z]{2,4}-[A-Za-z0-9_]+-[a-z_]+$/, SAFE_PATH = /^[A-Za-z0-9_\-]+(\/[A-Za-z0-9_\-]+)*\.onnx(\.json)?$/, warmed = {}, stageFn = null;
   var catalog = null, origin = null, ph = null, on = null, chain = Promise.resolve(), mem = {}, jobs = {}, order = [];
   function abs(p) { return new URL(p, location.href).href; }
   function noop() {}
+  function stage(st, id) { try { if (stageFn) stageFn(st, id); } catch (e) {} }
 
   async function jsonCached(url) {
     var c = null; try { c = await caches.open(CACHE); } catch (e) {}
@@ -886,11 +947,12 @@ var Pack = (function () {
   }
   function files(id) {
     var v = catalog[id], onnx, cfg;
-    Object.keys(v.files).forEach(function (k) { if (/\.onnx$/.test(k)) onnx = k; else if (/\.onnx\.json$/.test(k)) cfg = k; });
+    Object.keys(v.files).forEach(function (k) { if (!SAFE_PATH.test(k)) return; if (/\.onnx$/.test(k)) onnx = k; else if (/\.onnx\.json$/.test(k)) cfg = k; });
+    if (!onnx || !cfg) throw new Error('This voice entry is not valid.');
     return { onnx: origin + onnx, cfg: origin + cfg, size: (v.files[onnx] && v.files[onnx].size_bytes) || 63e6 };
   }
   function list(kind) {
-    return Object.keys(catalog || {}).filter(function (k) { var q = catalog[k].quality; return k.indexOf(kind === 'en' ? 'en_' : 'hi_') === 0 && q !== 'x_low' && q !== 'low'; }).sort();
+    return Object.keys(catalog || {}).filter(function (k) { var q = catalog[k].quality; return SAFE_ID.test(k) && catalog[k].files && k.indexOf(kind === 'en' ? 'en_' : 'hi_') === 0 && q !== 'x_low' && q !== 'low'; }).sort();
   }
   function label(id) {
     var p = id.split('-'), n = (p[1] || id).replace(/_/g, ' '); n = n.charAt(0).toUpperCase() + n.slice(1);
@@ -954,13 +1016,19 @@ var Pack = (function () {
     if (jobs[key]) return jobs[key];
     var job = chain.then(async function () {
       if (tk !== undefined && tk !== P.token) return null;
+      var cold = !warmed[id];
+      if (cold) stage('engine', id);
       await ensureEngine(onbytes);
+      if (!mem[id]) stage('voice', id);
       var vd = await voice(id, onbytes);
+      if (cold) stage('start', id);
       workers();
       var pd = await ask(ph, 'phonemize', [text, vd]);
+      if (cold) stage('speak', id);
       var out = await ask(on, 'generate', [pd, vd, 0]);
+      warmed[id] = true; if (cold) stage('ready', id);
       return URL.createObjectURL(out.file);
-    }).catch(function (e) { reset(); throw e; });
+    }).catch(function (e) { reset(); warmed = {}; stage('error', id); throw e; });
     chain = job.catch(noop); jobs[key] = job; order.push(key);
     job.then(function (u) { if (!u) delete jobs[key]; }, function () { delete jobs[key]; });
     while (order.length > 12) { var k = order.shift(), j = jobs[k]; delete jobs[k]; if (j) j.then(function (u) { if (u) URL.revokeObjectURL(u); }, noop); }
@@ -978,8 +1046,9 @@ var Pack = (function () {
     for (var k = 0; k < ids.length; k++) await voice(ids[k], add);
     cb(1, 'Ready. Works offline.');
   }
-  async function remove() { reset(); mem = {}; jobs = {}; order = []; engineOK = false; try { await caches.delete(CACHE); } catch (e) {} }
-  return { peekLocal: peekLocal, catalog: loadCatalog, list: list, label: label, defaults: pickDefaults, installed: installed, engineReady: engineReady, synth: synth, install: install, remove: remove, origin: function () { return origin; } };
+  async function remove() { reset(); warmed = {}; mem = {}; jobs = {}; order = []; engineOK = false; try { await caches.delete(CACHE); } catch (e) {} }
+  function warm(id) { return synth(/^hi_|^ne_|^sa_/.test(id) ? 'नमस्ते।' : 'Hello.', id); }
+  return { warm: warm, isWarm: function (id) { return !!warmed[id]; }, onstage: function (f) { stageFn = f; }, peekLocal: peekLocal, catalog: loadCatalog, list: list, label: label, defaults: pickDefaults, installed: installed, engineReady: engineReady, synth: synth, install: install, remove: remove, origin: function () { return origin; } };
 })();
 
 /* ---------- speaking ---------- */
@@ -1056,9 +1125,10 @@ async function speakPack(u, kind, t) {
   await Pack.catalog(); Pack.defaults();
   function idFor(k) { return k === 'en' ? S.pVoiceEn : S.pVoiceHi; }
   var id = idFor(vk); if (!id) throw new Error('No voice found for this language.');
-  var got = 0; setStatus('Preparing the natural voice…');
+  var got = 0; setStatus(Pack.isWarm(id) ? '' : 'Preparing the natural voice… the first line takes a few seconds');
   var url;
-  try { url = await Pack.synth(u.speech, id, t, function (n) { got += n; setStatus('Downloading the voice, ' + Math.round(got / 1e6) + ' MB…'); }); } finally { setStatus(''); }
+  VB.wait = true; renderBadge();
+  try { url = await Pack.synth(u.speech, id, t, function (n) { got += n; setStatus('Downloading the voice, ' + Math.round(got / 1e6) + ' MB…'); }); } finally { VB.wait = false; setStatus(''); renderBadge(); }
   if (t !== P.token || !url) return;
   [1, 2].forEach(function (k) { var nu = P.model && P.model.units[P.idx + k]; if (nu && nu.ok) Pack.synth(nu.speech, idFor(unitKind(nu) === 'en' ? 'en' : 'hi'), t).catch(function () {}); });
   await new Promise(function (res, rej) {
@@ -1291,7 +1361,7 @@ function buildSettings() {
   function showEng() { S.engine = S.engine || 'browser'; $('#engBrowser').style.display = S.engine === 'browser' ? '' : 'none'; $('#engPack').style.display = S.engine === 'pack' ? '' : 'none'; $('#engGoogle').style.display = S.engine === 'google' ? '' : 'none'; if (S.engine === 'pack') initPackUI(); }
   showEng();
   function bindSeg(id, key, cb) { $(id).addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; S[key] = b.dataset.v; save(key); Array.prototype.forEach.call($(id).children, function (x) { x.setAttribute('aria-pressed', x === b); }); if (cb) cb(); }); }
-  bindSeg('#segEngine', 'engine', function () { showEng(); checkVoiceQuality(); }); bindSeg('#segLang', 'lang');
+  bindSeg('#segEngine', 'engine', function () { showEng(); checkVoiceQuality(); renderBadge(); maybeWarm(); }); bindSeg('#segLang', 'lang');
   bindSeg('#segUi', 'ui', applyPlatform);
   bindSeg('#segMode', 'mode', function () { applyTheme(); $('#swatches').innerHTML = swatchHTML(); });
   $('#swatches').addEventListener('click', function (e) { var b = e.target.closest('.swatch'); if (!b) return; S.palette = b.dataset.pal; save('palette'); applyTheme(); $('#swatches').innerHTML = swatchHTML(); });
@@ -1319,7 +1389,7 @@ function initPackUI() {
   var st = $('#packStatus'), meter = $('#packMeter'), bi = $('#packInstall'), br = $('#packRemove');
   function fill(sel, kind, cur, key) {
     var ids = Pack.list(kind); sel.innerHTML = ids.map(function (id) { return '<option value="' + esc(id) + '"' + (id === cur ? ' selected' : '') + '>' + esc(Pack.label(id)) + '</option>'; }).join('') || '<option value="">No voice available</option>';
-    sel.onchange = function () { S[key] = sel.value; save(key); refresh(); };
+    sel.onchange = function () { S[key] = sel.value; save(key); refresh(); renderBadge(); if (key === 'pVoiceHi') maybeWarm(); };
   }
   async function refresh() {
     try {
@@ -1333,7 +1403,7 @@ function initPackUI() {
   }).catch(function (e) { st.textContent = e.message; $('#pHi').innerHTML = $('#pEn').innerHTML = '<option value="">Unavailable</option>'; });
   bi.onclick = async function () {
     bi.disabled = true; meter.style.width = '0%';
-    try { await Pack.install([S.pVoiceHi, S.pVoiceEn].filter(Boolean), function (p, m) { meter.style.width = Math.round(p * 100) + '%'; st.textContent = m; }); toast('Natural voice downloaded.'); }
+    try { await Pack.install([S.pVoiceHi, S.pVoiceEn].filter(Boolean), function (p, m) { meter.style.width = Math.round(p * 100) + '%'; st.textContent = m; }); S.engine = 'pack'; save('engine'); checkVoiceQuality(); toast('Natural voice downloaded and selected.'); maybeWarm(); renderBadge(); }
     catch (e) { st.textContent = 'Download failed: ' + e.message; }
     bi.disabled = false; setTimeout(function () { meter.style.width = '0%'; refresh(); }, 1200);
   };
@@ -1423,11 +1493,14 @@ if ('mediaSession' in navigator) {
 
 /* ---------- boot ---------- */
 applyPlatform(); applyTheme(); applyFont(); syncRate();
-loadVoices(); checkVoiceQuality(); el.voiceTip.onclick = function () { openPanel('settings'); };
+loadVoices(); checkVoiceQuality(); el.voiceTip.onclick = function () { openPanel('settings'); }; el.voiceBadge.onclick = function () { openPanel('settings'); renderBadge(); };
 if (window.speechSynthesis) speechSynthesis.onvoiceschanged = function () { loadVoices(); checkVoiceQuality(); if (el.panel.classList.contains('open') && el.panelTitle.textContent === 'Voice and reading') buildSettings(); };
 if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = PATHS.pdfWorker;
 el.modeBtn.onclick = function () { S.mode = resolvedTheme() === 'dark' ? 'light' : 'dark'; save('mode'); applyTheme(); };
-if (PATHS.pack && S.engine == null) Pack.peekLocal().then(function (ok) { if (ok && S.engine == null) { S.engine = 'pack'; checkVoiceQuality(); toast('Natural voice is on. It loads when you press play.', 4500); } });
+if (PATHS.pack && S.engine == null) Pack.peekLocal().then(function (ok) { if (ok && S.engine == null) { S.engine = 'pack'; checkVoiceQuality(); toast('Natural voice is selected. Getting it ready…', 4500); } }).then(function () { renderBadge(); maybeWarm(); });
+Pack.onstage(function (stg) { if (stg === 'ready') setVBState('ready'); else if (stg === 'error') setVBState('error'); else setVBState('loading', stg); });
+renderBadge();
+(window.requestIdleCallback || function (f) { setTimeout(f, 1200); })(function () { maybeWarm(); }, { timeout: 4000 });
 
 /* ---------- install as an app ---------- */
 var deferredInstall = null;
