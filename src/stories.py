@@ -1,0 +1,173 @@
+# Built-in sample stories. Retold in original words from folk tales that belong to everyone.
+# Add a language by adding books with a new "lang" code; the library groups shelves by language.
+import json, os
+B = []
+def book(id, lang, title, sub, chapters): B.append(dict(id=id, lang=lang, title=title, sub=sub, ch=[dict(t=t, p=p) for t, p in chapters]))
+
+# ------------------------------ हिन्दी ------------------------------
+book('hi-khargosh', 'hi', 'चतुर खरगोश और शेर', 'पंचतंत्र की कथा', [
+ ('जंगल का डर', [
+  'एक घने जंगल में भासुरक नाम का एक शेर रहता था। वह बहुत ताकतवर था, पर उतना ही घमंडी और लालची भी था।',
+  'वह रोज़ शिकार पर निकलता और एक साथ कई जानवरों को मार डालता। जंगल के जानवर डर के मारे काँपते रहते थे।',
+  'एक दिन सब जानवर इकट्ठा हुए। बूढ़े हाथी ने कहा, "अगर ऐसा ही चलता रहा तो जंगल में कोई नहीं बचेगा। हमें शेर से बात करनी चाहिए।"',
+  'सब शेर के पास गए और हाथ जोड़कर बोले, "महाराज, आप रोज़ शिकार की मेहनत क्यों करें? हम हर दिन अपनी तरफ़ से एक जानवर आपके पास भेज देंगे।"',
+  'शेर को यह बात ठीक लगी। उसने कहा, "ठीक है, पर जिस दिन कोई नहीं आया, उस दिन मैं सबको खा जाऊँगा।"']),
+ ('खरगोश की बारी', [
+  'अब हर दिन एक जानवर शेर के पास जाने लगा। धीरे-धीरे सबकी बारी आती गई।',
+  'एक दिन एक छोटे-से खरगोश की बारी आई। वह डरा हुआ था, पर उसने हिम्मत नहीं छोड़ी। वह सोचने लगा, "जान बचाने का कोई न कोई रास्ता ज़रूर होगा।"',
+  'वह जानबूझकर धीरे-धीरे चला और बहुत देर से शेर के पास पहुँचा। भूखा शेर गुस्से से दहाड़ रहा था, "इतनी देर क्यों की? मैं तुझे अभी खा जाऊँगा!"',
+  'खरगोश ने सिर झुकाकर कहा, "महाराज, मेरी कोई गलती नहीं है। रास्ते में एक दूसरा शेर मिल गया। वह कहता था कि इस जंगल का राजा वही है। उसने हम पाँच खरगोशों को रोक लिया। मैं बड़ी मुश्किल से भागकर आया हूँ।"']),
+ ('कुएँ में परछाईं', [
+  'शेर आगबबूला हो गया। "दूसरा शेर? मुझे अभी उसके पास ले चल!"',
+  'खरगोश उसे एक गहरे कुएँ के पास ले गया और बोला, "महाराज, वह शेर इसी किले में छिपा बैठा है। आप खुद झाँककर देख लीजिए।"',
+  'शेर ने कुएँ में झाँका। पानी में उसे अपनी ही परछाईं दिखाई दी। उसे लगा कि सचमुच कोई दूसरा शेर उसे घूर रहा है। वह जोर से दहाड़ा, और कुएँ से भी वही दहाड़ लौटकर आई।',
+  'गुस्से में शेर ने कुएँ में छलाँग लगा दी और डूब गया। जंगल के सब जानवर खुशी से झूम उठे। उन्होंने खरगोश का धन्यवाद किया।',
+  'सीख: ताकत से बड़ी चीज़ बुद्धि है। जो सोच-समझकर काम करता है, वह बड़ी से बड़ी मुसीबत से निकल आता है।'])])
+
+book('hi-bandar-magar', 'hi', 'बंदर और मगरमच्छ', 'जातक कथा', [
+ ('नदी किनारे की दोस्ती', [
+  'नदी के किनारे एक जामुन का बड़ा पेड़ था। उस पर एक समझदार बंदर रहता था। पेड़ पर मीठे जामुन हमेशा लगे रहते थे।',
+  'एक दिन नदी से एक मगरमच्छ किनारे पर आया। वह थका हुआ और भूखा था। बंदर ने उसे मीठे जामुन खिलाए। मगरमच्छ को जामुन बहुत पसंद आए।',
+  'उस दिन के बाद मगरमच्छ रोज़ आने लगा। दोनों घंटों बातें करते, हँसते और जामुन खाते। देखते-देखते वे पक्के दोस्त बन गए।',
+  'एक दिन मगरमच्छ कुछ जामुन अपनी पत्नी के लिए भी ले गया। पत्नी ने उन्हें खाया तो बोली, "जो बंदर रोज़ ऐसे मीठे फल खाता है, उसका कलेजा कितना मीठा होगा! मुझे उसका कलेजा चाहिए।"']),
+ ('बंदर की समझदारी', [
+  'मगरमच्छ दुखी हुआ, पर पत्नी की ज़िद के आगे हार गया। अगले दिन उसने बंदर से कहा, "दोस्त, मेरी पत्नी तुमसे मिलना चाहती है। चलो, मेरी पीठ पर बैठ जाओ।"',
+  'बंदर खुशी-खुशी पीठ पर बैठ गया। जब वे नदी के बीच पहुँचे तो मगरमच्छ ने अपनी चाल बता दी। "माफ़ करना दोस्त, मेरी पत्नी को तुम्हारा कलेजा चाहिए।"',
+  'बंदर घबराया नहीं। उसने हँसकर कहा, "अरे भाई, तुमने पहले क्यों नहीं बताया? मैं अपना कलेजा तो पेड़ की डाल पर टाँगकर आया हूँ। चलो वापस चलें, मैं ले आता हूँ।"',
+  'भोला मगरमच्छ उसे वापस किनारे पर ले आया। बंदर छलाँग मारकर पेड़ पर चढ़ गया और बोला, "मूर्ख! कलेजा भला कोई बाहर टाँगकर घूमता है? जो दोस्त को धोखा दे, उसके साथ दोस्ती कैसी?"',
+  'सीख: मुसीबत में भी शांत रहना चाहिए, और जो धोखा दे उस पर दोबारा भरोसा नहीं करना चाहिए।'])])
+
+book('hi-teen-machhliyan', 'hi', 'तीन मछलियाँ', 'पंचतंत्र की कथा', [
+ ('तालाब में खतरा', [
+  'एक सुंदर तालाब में तीन मछलियाँ रहती थीं। पहली का नाम था दूरदर्शी, दूसरी का नाम था समयबुद्धि और तीसरी का नाम था टालू।',
+  'एक शाम कुछ मछुआरे तालाब के पास से गुज़रे। उन्होंने कहा, "यहाँ तो बहुत मछलियाँ हैं। कल सुबह जाल लेकर आएँगे।"',
+  'दूरदर्शी ने यह सुन लिया। उसने बाकी दोनों से कहा, "हमें आज ही यह तालाब छोड़ देना चाहिए। खतरा आने से पहले ही बच निकलना अक़्लमंदी है।"']),
+ ('तीनों के तीन रास्ते', [
+  'समयबुद्धि बोली, "अभी जल्दी क्या है? जब खतरा सामने आएगा, तब कोई उपाय निकाल लेंगे।" टालू हँसकर बोला, "जो होना है वह तो होकर रहेगा। चिंता करने से क्या फ़ायदा?"',
+  'दूरदर्शी उसी रात नाले के रास्ते दूसरे तालाब में चली गई।',
+  'सुबह मछुआरों ने जाल डाला। समयबुद्धि जाल में फँस गई, पर उसने साँस रोककर मरे जैसा नाटक किया। मछुआरों ने उसे मरी समझकर किनारे फेंक दिया और वह लुढ़ककर वापस पानी में पहुँच गई।',
+  'टालू को भागने का मौका ही नहीं मिला। वह जाल में फँसा रहा और पकड़ा गया।',
+  'सीख: खतरे को पहले पहचान लेने वाला सबसे समझदार होता है। जो मुसीबत में भी सोच सके, वह भी बच जाता है। पर जो हर बात टालता है, वह अक्सर पछताता है।'])])
+
+book('hi-birbal-khichdi', 'hi', 'बीरबल की खिचड़ी', 'अकबर-बीरबल की कहानी', [
+ ('ठंड की शर्त', [
+  'सर्दियों के दिन थे। एक रात बादशाह अकबर और बीरबल महल के बाहर झील के किनारे टहल रहे थे। हवा इतनी ठंडी थी कि हड्डियाँ तक काँप रही थीं।',
+  'अकबर ने कहा, "इतनी ठंड में तो कोई पानी में खड़ा नहीं हो सकता।" बीरबल ने कहा, "जहाँपनाह, पैसे के लिए लोग क्या नहीं करते।"',
+  'अकबर ने घोषणा करवाई, "जो आदमी पूरी रात झील के ठंडे पानी में खड़ा रहेगा, उसे हज़ार अशर्फ़ियाँ इनाम में मिलेंगी।"']),
+ ('दूर की आग', [
+  'एक गरीब आदमी ने हिम्मत की। वह पूरी रात कमर तक पानी में खड़ा रहा। सुबह वह काँपता हुआ दरबार में पहुँचा।',
+  'अकबर ने पूछा, "तुम इतनी ठंड कैसे सह गए?" उसने कहा, "जहाँपनाह, महल की दूर वाली मीनार पर एक दीया जल रहा था। मैं उसी को देखता रहा।"',
+  'अकबर बोले, "तब तो तुमने दीये की गर्मी से रात काटी। इनाम नहीं मिलेगा।" बेचारा आदमी निराश होकर लौट गया। बीरबल को यह बात सही नहीं लगी।']),
+ ('खिचड़ी पकती रही', [
+  'अगले दिन बीरबल दरबार में नहीं आए। अकबर ने बुलवाया तो जवाब मिला, "मैं खिचड़ी पका रहा हूँ।" अकबर खुद देखने पहुँचे।',
+  'बीरबल ने ज़मीन में तीन डंडे गाड़े थे। ऊपर एक हाँडी टँगी थी और नीचे बहुत दूर आग जल रही थी। अकबर हँस पड़े, "बीरबल, इतनी दूर की आग से खिचड़ी कैसे पकेगी?"',
+  'बीरबल ने कहा, "जहाँपनाह, जब दूर की मीनार के दीये से आदमी को गर्मी मिल सकती है, तो मेरी खिचड़ी क्यों नहीं पक सकती?" अकबर समझ गए। उन्होंने उस गरीब को इनाम दिया और बीरबल की बुद्धि की तारीफ़ की।'])])
+
+book('hi-tenali-moorkh', 'hi', 'तेनालीराम और सबसे बड़ा मूर्ख', 'तेनालीराम की कहानी', [
+ ('राजा का सवाल', [
+  'विजयनगर के राजा कृष्णदेव राय के दरबार में एक दिन होली की चर्चा चल रही थी। राजा ने हँसते हुए कहा, "इस बार हम मूर्खों का एक बड़ा सम्मेलन करेंगे। जो सबसे बड़ा मूर्ख निकलेगा, उसे इनाम मिलेगा।"',
+  'सारे दरबारी अपनी-अपनी सूची बनाने में जुट गए। तेनालीराम ने भी एक सूची बनाई।',
+  'होली के दिन सबने अपनी सूचियाँ राजा को दीं। दूसरों की सूचियों में किसान, व्यापारी और गाँव वाले थे। पर तेनालीराम की सूची में सबसे ऊपर राजा का अपना नाम लिखा था।']),
+ ('तेनालीराम का जवाब', [
+  'राजा का चेहरा लाल हो गया। "तेनालीराम! तुमने मेरा नाम कैसे लिख दिया?"',
+  'तेनालीराम ने हाथ जोड़कर कहा, "महाराज, कल मैंने देखा कि आपने एक आदमी को दस हज़ार अशर्फ़ियाँ दे दीं, जो घोड़े खरीदने गया था। उसने कहा था कि वह अगले हफ़्ते घोड़े लेकर लौटेगा। पर वह तो आपके खज़ाने के साथ भाग गया होगा।"',
+  'राजा ने कहा, "अगर वह घोड़े लेकर लौट आया तो?" तेनालीराम मुस्कुराए, "तब मैं आपका नाम काटकर उसी का नाम लिख दूँगा, महाराज।"',
+  'राजा खिलखिलाकर हँस पड़े। उन्होंने कहा, "तुम हर बार अपनी बात इतने मज़े से कह देते हो कि गुस्सा कर ही नहीं पाता।" तेनालीराम को ढेर सारा इनाम मिला।',
+  'सीख: सच्ची बात अगर हँसी-मज़ाक के साथ कही जाए तो सामने वाला उसे बुरा नहीं मानता, बल्कि सीख लेता है।'])])
+
+book('hi-ekta', 'hi', 'एकता की ताकत', 'कबूतर और जाल', [
+ ('जाल में कबूतर', [
+  'एक घने जंगल में एक विशाल बरगद का पेड़ था। उस पर बहुत-से कबूतर रहते थे। उनका राजा था चित्रग्रीव, जो बहुत समझदार और दयालु था।',
+  'एक सुबह कबूतर दाना ढूँढने निकले। दूर ज़मीन पर उन्हें बहुत-से दाने बिखरे हुए दिखे। एक जवान कबूतर चिल्लाया, "वहाँ तो दावत है! चलो, चलें।"',
+  'राजा ने कहा, "इस सुनसान जंगल में इतने दाने कैसे आ गए? कहीं यह कोई जाल तो नहीं?" पर भूखे कबूतरों ने उसकी बात नहीं मानी। सब नीचे उतर आए और दाना चुगने लगे। तभी एक बड़ा-सा जाल उन सब पर गिर पड़ा।']),
+ ('सब मिलकर उड़े', [
+  'कबूतर घबराकर फड़फड़ाने लगे। कोई इधर उड़ने की कोशिश करता, कोई उधर। जाल और कसता गया।',
+  'चित्रग्रीव ने शांत स्वर में कहा, "घबराओ मत। अकेले-अकेले हम कमज़ोर हैं, पर मिलकर बहुत ताकतवर हैं। जब मैं कहूँ, सब एक साथ उड़ना।"',
+  'उसने गिनती की, और सारे कबूतर एक साथ ज़ोर लगाकर आसमान में उड़ गए। पूरा जाल उनके साथ उठ गया। शिकारी हाथ मलता रह गया।',
+  'कबूतर अपने मित्र चूहे हिरण्यक के बिल पर पहुँचे। चूहे ने अपने तेज़ दाँतों से जाल की सारी रस्सियाँ कुतर डालीं, और सब कबूतर आज़ाद हो गए।',
+  'सीख: एकता में बड़ी ताकत होती है। जो मिलकर काम करते हैं, वे हर मुश्किल को पार कर लेते हैं।'])])
+
+# ------------------------------ English ------------------------------
+book('en-hare-tortoise', 'en', 'The Tortoise and the Hare', 'A fable', [
+ ('The Boast', [
+  'On a sunny hillside lived a hare who was proud of one thing above all: he was fast. He raced the wind, he raced the birds, and he never lost.',
+  'Nearby lived a tortoise who moved slowly and thought carefully. One morning the hare watched her cross the path and laughed. "At that speed, you will reach the river by next winter," he said.',
+  'The tortoise looked up calmly. "Perhaps," she said. "But I would still like to race you."']),
+ ('The Race', [
+  'The animals gathered at the old oak tree. The fox said, "Ready, steady, go!" and the hare shot away. In a few seconds he was so far ahead that the tortoise had barely left the starting line.',
+  'Halfway along the path, the hare stopped. "I have all the time in the world," he yawned. He lay down under a shady tree and closed his eyes.',
+  'The tortoise did not stop. Step by step, she walked past the sleeping hare. The sun climbed, the birds sang, and she kept going.']),
+ ('The Finish', [
+  'When the hare woke up, the shadows had grown long. He sprinted as fast as he could, but as he came round the last bend he saw the tortoise crossing the finish line, with the whole forest cheering.',
+  'The hare hung his head. The tortoise only smiled and said, "Being quick is a gift. Being steady is a choice."',
+  'Moral: do not let talent make you careless. Slow and steady effort will often win in the end.'])])
+
+book('en-lion-mouse', 'en', 'The Lion and the Mouse', 'A fable', [
+ ('A Small Mistake', [
+  'A great lion was sleeping in the shade when a tiny mouse ran across his paw. The lion woke with a roar and caught the mouse by the tail.',
+  '"Please, Your Majesty," squeaked the mouse. "Let me go, and one day I will repay your kindness."',
+  'The lion laughed so hard that he nearly let go by himself. "What could a mouse ever do for a lion?" he said. But he was in a good mood, so he lifted his paw and let the little creature run away.']),
+ ('The Net', [
+  'A few weeks later, the lion was walking through the forest when he stepped into a hunter\'s net. The ropes tightened around him and the more he struggled, the more tangled he became. His roars echoed through the trees.',
+  'The mouse heard it and came running. "Stay still, Your Majesty," she said. "I know how to help."',
+  'She climbed onto the ropes and began to gnaw. Strand by strand, with her small sharp teeth, she cut the net open. Soon the lion was free.']),
+ ('Friends', [
+  'The lion bowed his great head. "I laughed at you once, and I was wrong. You have saved my life."',
+  'From that day on, the lion and the mouse were friends, and the whole forest learned that no one is too small to help.',
+  'Moral: kindness is never wasted, and even the smallest friend can prove to be the greatest help.'])])
+
+book('en-woodcutter', 'en', 'The Honest Woodcutter', 'A folk tale', [
+ ('The Lost Axe', [
+  'Ravi was a poor woodcutter who lived at the edge of a forest. Every morning he took his iron axe, cut a bundle of firewood, and sold it in the village. It was hard work, but he never complained.',
+  'One day, while cutting a branch that hung over the river, his axe slipped from his hands and sank into the deep water. Ravi sat on the bank and wept. Without the axe he could not earn a single coin.']),
+ ('The Golden Offer', [
+  'Suddenly the river glowed, and a gentle spirit rose from the water. "Why do you cry?" she asked. Ravi told her what had happened.',
+  'The spirit dived beneath the surface and came back holding a shining golden axe. "Is this yours?" she asked. Ravi shook his head. "No, my axe was plain iron."',
+  'She dived again and returned with a silver axe. "Is this yours?" Again Ravi shook his head. "No. Mine was old and black, with a wooden handle."']),
+ ('The Reward', [
+  'The spirit smiled and brought up his own iron axe. "Yes! That is mine," said Ravi happily.',
+  '"You have told the truth even when no one was watching," said the spirit. "Take the gold and silver axes as well. They are my gift to you."',
+  'Ravi thanked her and went home. He shared his good fortune with his neighbours, and he never forgot that honesty was his real treasure.',
+  'Moral: an honest heart is worth more than gold.'])])
+
+book('en-kings-tea', 'en', 'The King and the Cup of Tea', 'A tale of wisdom', [
+ ('The Proud Scholar', [
+  'Long ago, a learned scholar came to the court of a wise king. He had read hundreds of books and he loved to talk about everything he knew. He said, "Your Majesty, there is nothing I cannot teach."',
+  'The king smiled politely. "Then please sit with me and have some tea," he said.']),
+ ('The Overflowing Cup', [
+  'A servant brought a tray with two cups. The king poured tea into the scholar\'s cup, and kept pouring. The tea filled the cup, spilled over the edge, ran across the saucer and dripped onto the carpet.',
+  '"Your Majesty, stop!" cried the scholar. "The cup is already full. It cannot hold any more!"',
+  'The king put down the teapot. "Exactly," he said gently. "Like this cup, your mind is so full of your own opinions that nothing new can enter. Empty your cup a little, and you will find there is always room to learn."']),
+ ('A New Beginning', [
+  'The scholar went quiet. Then he laughed, bowed, and said, "Thank you, Your Majesty. That is the best lesson I have had in years."',
+  'He stayed at the court for a long time, listening more than he spoke, and he became wiser than he had ever been.',
+  'Moral: stay curious. A mind that thinks it knows everything has stopped learning.'])])
+
+book('en-little-lamp', 'en', 'The Little Lamp', 'An original story', [
+ ('The Village in the Dark', [
+  'In the small village of Kheda, the streets were so narrow and winding that people often got lost after sunset. The villagers wished for a light, but each one thought, "Someone else will surely do it."',
+  'At the end of the lane lived a girl named Meera. She had nothing but an old clay lamp, a little oil, and a window that faced the road.']),
+ ('One Flame', [
+  'One evening Meera lit her lamp and placed it on the windowsill. It was a tiny flame, hardly brighter than a firefly. "It will not help anyone," she thought, but she left it burning.',
+  'That night a farmer returning from the market saw the glow and found the lane. A mother looking for her child saw it from afar and walked straight home. An old man with a lantern that had run out of oil followed the light to his door.',
+  'The next evening, the farmer put a lamp outside his own gate. Then the mother did the same. By the end of the week, every house in the lane had a small flame in its window.']),
+ ('A Street of Light', [
+  'Soon, the narrow lanes of Kheda shone like a river of stars. Travellers from other villages came just to walk through them at night, and the villagers were proud.',
+  'When people thanked Meera, she only laughed. "I did not light the village," she said. "I only lit one lamp. You all did the rest."',
+  'Moral: do not wait for others to begin. One small light can start something much bigger than itself.'])])
+
+book('en-golden-egg', 'en', 'The Goose and the Golden Eggs', 'A fable', [
+ ('A Strange Goose', [
+  'A farmer and his wife kept a few animals on their small plot of land. One morning, in the nest of their goose, they found something shining. It was an egg made of solid gold.',
+  'They sold it in the market for a great sum. The next morning there was another golden egg, and the morning after that, another. The couple were delighted.']),
+ ('Too Much Hurry', [
+  'Soon they were rich. But they were not satisfied. "One egg a day is far too slow," said the wife. "Imagine how much gold must be inside her."',
+  '"You are right," said the farmer. "If we cut her open, we can have all the eggs at once."',
+  'They took a knife and cut the goose open. But inside, she was just like any other goose. There was no gold at all, and there would never be another golden egg.']),
+ ('Nothing Left', [
+  'The couple sat in silence. Their greed had cost them the one thing that had made them rich.',
+  'Moral: be patient and grateful for what you have. Greed can destroy the very thing that brings you good fortune.'])])
+
+out = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'stories.json')
+json.dump(B, open(out, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+print(len(B), 'books,', sum(len(' '.join(' '.join(c['p']) for c in b['ch']).split()) for b in B), 'words')

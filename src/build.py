@@ -4,9 +4,10 @@ H=os.path.dirname(os.path.abspath(__file__))+'/'; B=H; R=H+'../'
 app=open(B+'app.src.html',encoding='utf-8').read()
 legacy=open(H+'legacy.js',encoding='utf-8').read()
 gita=open(H+'gita.json',encoding='utf-8').read()
+stories=open(H+'stories.json',encoding='utf-8').read()
 pal_css=open(B+'palettes.css').read(); pal_json=open(B+'palettes.json').read()
 def fill(t,paths):
-    return (t.replace('/*__LEGACY__*/',legacy).replace('/*__GITA__*/',gita).replace('/*__PALETTES__*/',pal_css)
+    return (t.replace('/*__LEGACY__*/',legacy).replace('/*__GITA__*/',gita).replace('/*__STORIES__*/',stories).replace('/*__PALETTES__*/',pal_css)
              .replace('/*__PALJSON__*/',pal_json).replace('/*__PATHS__*/',json.dumps(paths)))
 EARLY='''<script>try{var _p=JSON.parse(localStorage.getItem('vachak.palette')||'null')||'mayur',_m=JSON.parse(localStorage.getItem('vachak.mode')||'null')||'system',_d=_m==='dark'||(_m==='system'&&matchMedia('(prefers-color-scheme: dark)').matches),_r=document.documentElement;_r.setAttribute('data-palette',_p);_r.setAttribute('data-theme',_d?'dark':'light')}catch(e){}
 (function(){var u=navigator.userAgent||'',p=navigator.platform||'',t=navigator.maxTouchPoints||0;window.__plat=function(o){if(o&&o!=='auto')return o;if(/iPhone|iPad|iPod/.test(u)||(p==='MacIntel'&&t>1))return'ios';if(/Android/.test(u))return'android';if(/Mac/.test(p))return'mac';if(/Win/.test(p))return'windows';return'desktop'};var o='auto';try{o=JSON.parse(localStorage.getItem('vachak.ui')||'"auto"')}catch(e){}document.documentElement.setAttribute('data-platform',window.__plat(o))})()</script>'''

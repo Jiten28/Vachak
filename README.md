@@ -3,10 +3,11 @@
 Open a Hindi, Sanskrit or English PDF and listen to it in a natural voice. Click any line to start reading from it.
 Installable on **iOS, Android, Mac and Windows**; works offline; handles PDFs of 2,000+ pages (pages are read lazily).
 
+- **Try the deployed app:** [https://vachak.vercel.app/](https://vachak.vercel.app/)
 - Repairs legacy-font Devanagari (e.g. Gita Press scans with embedded text) into proper Unicode.
 - Bhagavad Gita (701 slokas) built in.
 - **Natural voice pack** (Piper neural voices, run fully in the browser) downloaded once inside the app, then offline.
-- 8 colour themes x light/dark/system. Platform-shaped UI: iPhone, Android and desktop styles (Settings > Interface style to preview).
+- 11 colour themes (incl. Cocoa, Oat, Racing, Tamra) x light/dark/system. Platform-shaped UI: iPhone, Android and desktop styles (Settings > Interface style to preview).
 
 ## Deploy (GitHub Pages)
 1. Create a repo, push this folder, Settings > Pages > Source: **GitHub Actions**.
@@ -31,3 +32,6 @@ Edit `src/app.src.html`, then `python3 src/palettes.py && python3 src/build.py` 
 - PDFs are parsed with `isEvalSupported: false` (mitigates CVE-2024-4367 in the bundled PDF.js 3.11) and every piece of PDF text is HTML-escaped before display.
 - Files never leave the device. Only the optional Google Cloud voice sends text (with your own API key) to Google; restrict that key to this site's address in Google Cloud.
 - Voice names and file paths from the voice list are validated before use.
+
+## Adding stories or another language
+Stories live in `src/stories.py` (one `book(...)` call each, with a `lang` code). Run `python3 src/stories.py && python3 src/build.py`. A new `lang` code gets its own shelf tab automatically; add its display name to `LNAME` in `src/app.src.html`.

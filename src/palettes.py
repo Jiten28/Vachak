@@ -15,6 +15,14 @@ P = {
                                     dict(bg='#0C0C0E',panel='#141416',sheet='#1B1B1E',ink='#EEEEF0',ink2='#B9B9C0',ink3='#9A9AA3',line='#2C2C31',accent='#F3B845',accent2='#E09A1A',aink='#1A1203',soft='#3A2F12',mark='#644A0C',mink='#FFF3D0')),
  'spasht': ('Spasht', 'High contrast',   dict(bg='#FFFFFF',panel='#FFFFFF',sheet='#FFFFFF',ink='#000000',ink2='#1A1A1A',ink3='#333333',line='#000000',accent='#0020C8',accent2='#0020C8',aink='#FFFFFF',soft='#E3E8FF',mark='#FFE500',mink='#000000'),
                                     dict(bg='#000000',panel='#000000',sheet='#000000',ink='#FFFFFF',ink2='#F0F0F0',ink3='#DADADA',line='#FFFFFF',accent='#FFE500',accent2='#FFE500',aink='#000000',soft='#2A2600',mark='#FFE500',mink='#000000')),
+ 'kakao':  ('Cocoa',  'Cocoa, cream and sky', dict(bg='#EFE4CF',panel='#F6EEDD',sheet='#FFFBF1',ink='#2E1B12',ink2='#5A4133',ink3='#6C5343',line='#DACBB0',accent='#6B3F26',accent2='#8A5535',aink='#FFFFFF',soft='#D8E8F3',mark='#A9D3EE',mink='#14202B'),
+                                    dict(bg='#150E0A',panel='#1E1510',sheet='#271B15',ink='#F3E8D6',ink2='#CDBBA4',ink3='#AE9A84',line='#3D2B21',accent='#E2C7A3',accent2='#C79A6B',aink='#24160E',soft='#243645',mark='#27557A',mink='#F4FAFF')),
+ 'jau':    ('Oat',    'Oat, slate and tomato', dict(bg='#E7E2D6',panel='#F2EEE5',sheet='#FBF9F4',ink='#1F2A3A',ink2='#475468',ink3='#586578',line='#D5CEBF',accent='#B83219',accent2='#D9462A',aink='#FFFFFF',soft='#FBE4DD',mark='#F7BCAA',mink='#2A1410'),
+                                    dict(bg='#0F1621',panel='#161F2D',sheet='#1C2738',ink='#EEF1F6',ink2='#B7C0CF',ink3='#97A2B5',line='#2B374B',accent='#FF8466',accent2='#F25B3A',aink='#2A0C05',soft='#3B2622',mark='#8A3320',mink='#FFEDE7')),
+ 'ranga':  ('Racing', 'Racing green and gold', dict(bg='#E5E3D8',panel='#F1EFE6',sheet='#FBFAF4',ink='#101A14',ink2='#3F4C43',ink3='#525F58',line='#D2CFBE',accent='#0B4D36',accent2='#146B4B',aink='#F7E9B8',soft='#E9E3C6',mark='#E8D59B',mink='#1A1405'),
+                                    dict(bg='#0B0C0B',panel='#131413',sheet='#1A1B1A',ink='#ECE9DD',ink2='#B9B6A6',ink3='#9A9788',line='#2B2C2A',accent='#D8BE7E',accent2='#C2A25A',aink='#17120A',soft='#1E3A2D',mark='#1B5640',mink='#FBF6E4')),
+ 'tamra':  ('Tamra',  'Pearl and copper', dict(bg='#E6E5E8',panel='#F1F0F3',sheet='#FBFAFC',ink='#1B1F2A',ink2='#454B5C',ink3='#585E70',line='#D2D1D8',accent='#9A4A1E',accent2='#B8622E',aink='#FFFFFF',soft='#F3E1D4',mark='#F2C7A6',mink='#2A1608'),
+                                    dict(bg='#0A1118',panel='#101A24',sheet='#16222F',ink='#E9EEF4',ink2='#B3BFCC',ink3='#93A1B1',line='#25344A',accent='#EDA878',accent2='#D98A54',aink='#2A1407',soft='#3A2A20',mark='#733E16',mink='#FFF3E8')),
 }
 def lum(h):
     h=h.lstrip('#'); r,g,b=[int(h[i:i+2],16)/255 for i in (0,2,4)]
