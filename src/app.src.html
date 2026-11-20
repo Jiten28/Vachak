@@ -471,7 +471,7 @@ html, body { overscroll-behavior: none; }
     <div>
       <p class="sec-label">Built in</p>
       <div class="lib">
-        <button type="button" id="libGita"><b>Bhagavad Gita</b><span>701 slokas · 18 chapters · Sanskrit</span></button>
+        <button type="button" id="libGita" hidden><b>Bhagavad Gita</b><span>701 slokas · 18 chapters · Sanskrit</span></button>
         <button type="button" id="libStories"><b>Story shelf</b><span id="libStoriesSub">Stories in Hindi and English</span></button>
         <button type="button" id="libSpiritual"><b>Spiritual shelf</b><span id="libSpiritualSub">Hanuman Chalisa, mantras, aartis</span></button>
         <button type="button" id="libSearch"><b>Search in this book</b><span>Find a word, a line or a sloka</span></button>
@@ -639,7 +639,7 @@ function splitSentences(s) {
   return out;
 }
 function toSpeech(s) {
-  return applyPron(s).replace(/[​-‍﻿]/g, '')
+  return applyPron(s).replace(/ॐ/g, ' ओम् ').replace(/[​-‍﻿]/g, '')
     .replace(/[‘’“”"«»\[\]*_#|~^]/g, ' ')
     .replace(/[—–]/g, ', ')
     .replace(/[।॥]+\s*[\d०-९][\d०-९.\-–,]*\s*[।॥]+/g, ' । ')
@@ -1273,7 +1273,7 @@ function speakBrowser(text, kind, t) {
       if (t !== P.token || i >= chunks.length) return res();
       var ut = new SpeechSynthesisUtterance(chunks[i++]);
       if (v) { ut.voice = v; ut.lang = v.lang; } else ut.lang = vk === 'en' ? 'en-IN' : vk === 'hi' ? 'hi-IN' : vk + '-IN';
-      ut.rate = Math.max(0.3, Math.min(2, S.rate * (kind === 'sa' ? 0.94 : 1))); ut.pitch = 1; ut.volume = sleepVol();
+      ut.rate = Math.max(0.3, Math.min(2, S.rate * (kind === 'sa' ? 0.94 : 1) * (chantOn() ? 0.82 : 1))); ut.pitch = chantOn() ? 0.9 : 1; ut.volume = sleepVol();
       ut.onend = next;
       ut.onerror = function (e) { if (e && (e.error === 'interrupted' || e.error === 'canceled')) return res(); if (e && e.error === 'not-allowed') { toast('Tap play again to allow audio.'); P.token++; return res(); } next(); };
       try { speechSynthesis.speak(ut); } catch (err) { res(); }
@@ -1318,7 +1318,7 @@ async function speakPack(u, kind, t) {
   if (t !== P.token || !url) return;
   [1, 2].forEach(function (k) { var nu = P.model && P.model.units[P.idx + k]; if (nu && nu.ok) Pack.synth(nu.speech, idFor(unitKind(nu) === 'en' ? 'en' : 'hi'), t).catch(function () {}); });
   await new Promise(function (res, rej) {
-    var a = sharedAudio(); a.src = url; a.volume = sleepVol(); a.playbackRate = Math.max(0.6, Math.min(1.6, S.rate));
+    var a = sharedAudio(); a.src = url; a.volume = sleepVol(); a.playbackRate = Math.max(0.6, Math.min(1.6, S.rate * (chantOn() ? 0.85 : 1)));
     a.onended = res; a.onerror = function () { rej(new Error('Could not play the audio.')); };
     a.play().catch(rej);
   });
@@ -1366,7 +1366,7 @@ async function loop(t) {
         if (t !== P.token) return;
         stat('units', 1); stat('secs', Math.min(60, (Date.now() - t0) / 1000));
         if (sleepCheck(false)) return;
-        await sleep(u.gap || S.gap, t);
+        await sleep(chantOn() ? Math.max(u.gap || S.gap, 1300) : (u.gap || S.gap), t);
         if (t !== P.token) return;
       }
       P.idx++; if (P.idx % 4 === 0) savePos();
@@ -1407,6 +1407,8 @@ async function openGita(startPage) {
   await showPage(startPage || (pos && pos.p) || 1, startPage ? 0 : (pos && pos.i) || 0);
   setPlayUI();
 }
+var CHANT = store.get('chant', true);
+function chantOn() { return CHANT && DOC && (DOC.kind === 'gita' || (DOC.kind === 'book' && DOC.book.cat === 'spiritual')); }
 var LNAME = { hi: 'हिन्दी', en: 'English', sa: 'संस्कृतम्', bn: 'বাংলা', te: 'తెలుగు' };
 async function openBook(id, startPage) {
   var b = (window.STORIES || []).filter(function (x) { return x.id === id; })[0]; if (!b) return;
@@ -1429,7 +1431,10 @@ function buildStories(filter, cat) {
   function card(b) {
     return '<button type="button" class="story" data-id="' + esc(b.id) + '"><span class="cv" lang="' + esc(b.lang) + '" aria-hidden="true">' + esc(Array.from(b.title)[0]) + '</span><span class="tt"><b lang="' + esc(b.lang) + '">' + esc(b.title) + '</b><small lang="' + esc(b.lang) + '">' + esc(b.sub) + '</small><span class="meta">' + esc(LNAME[b.lang] || b.lang) + ' · ' + b.pg.length + (b.pg.length === 1 ? ' page' : ' pages') + ' · about ' + storyMinutes(b) + ' min</span></span></button>';
   }
-  if (cat === 'spiritual') list.forEach(function (b) { h += card(b); });
+  if (cat === 'spiritual') {
+    if (filter === 'all' || filter === 'sa') h += '<button type="button" class="story" data-id="__gita"><span class="cv" lang="sa" aria-hidden="true">गी</span><span class="tt"><b lang="sa">श्रीमद्भगवद्गीता</b><small>Bhagavad Gita</small><span class="meta">संस्कृतम् · 18 chapters · 701 slokas</span></span></button>';
+    list.forEach(function (b) { h += card(b); });
+  }
   else {
     list.sort(function (a, b) { return b.w - a.w; });
     [['Long reads for the night', 1400, 1e9], ['Break-time stories', 600, 1400], ['Quick stories', 0, 600]].forEach(function (g) {
@@ -1439,7 +1444,7 @@ function buildStories(filter, cat) {
   }
   el.panelBody.innerHTML = h + '</div></div>';
   $('#segShelf').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; store.set(sk, b.dataset.v); buildStories(b.dataset.v, cat); });
-  $('#shelfList').addEventListener('click', function (e) { var b = e.target.closest('.story'); if (!b) return; closePanel(); openBook(b.dataset.id); });
+  $('#shelfList').addEventListener('click', function (e) { var b = e.target.closest('.story'); if (!b) return; closePanel(); if (b.dataset.id === '__gita') openGita(); else openBook(b.dataset.id); });
 }
 async function openText(text) {
   resetDoc();
@@ -1671,7 +1676,7 @@ renderDay(); renderSavedCount(); renderContinue();
   var tw = document.querySelector('.toc-wrap'); tw.parentNode.insertBefore(d, tw);
   document.getElementById('slokaGo').onclick = function () { gotoVerse(c.n, v[0]); };
 })();
-(function () { var a = window.STORIES || [], c = { story: 0, spiritual: 0 }, L = {}; a.forEach(function (b) { c[b.cat || 'story']++; if ((b.cat || 'story') === 'story') L[b.lang] = 1; }); el.libStoriesSub.textContent = c.story + ' stories · ' + Object.keys(L).map(function (l) { return LNAME[l] || l; }).join(', '); el.libSpiritualSub.textContent = c.spiritual + ' texts · Hanuman Chalisa, mantras, aartis'; })();
+(function () { var a = window.STORIES || [], c = { story: 0, spiritual: 0 }, L = {}; a.forEach(function (b) { c[b.cat || 'story']++; if ((b.cat || 'story') === 'story') L[b.lang] = 1; }); el.libStoriesSub.textContent = c.story + ' stories · ' + Object.keys(L).map(function (l) { return LNAME[l] || l; }).join(', '); el.libSpiritualSub.textContent = (c.spiritual + 1) + ' texts · Gita, Hanuman Chalisa, mantras, aartis'; el.libGita.hidden = true; })();
 el.libSpiritual.onclick = function () { closeRail(true); openPanel('spiritual'); };
 el.libSaved.onclick = function () { closeRail(true); openPanel('saved'); };
 el.libSearch.onclick = function () { closeRail(true); openPanel('search'); };
@@ -1765,6 +1770,7 @@ async function buildPop() {
   h += '<div class="grp"><p class="grp-t">Voice</p><div role="radiogroup" aria-label="Voice">' + rows + '</div></div>' + packRows;
   h += '<div class="grp"><p class="grp-t">Speed</p>' + seg('segRate', [[0.7, '0.7×'], [0.8, '0.8×'], [0.9, '0.9×'], [1, '1×'], [1.1, '1.1×'], [1.25, '1.25×'], [1.5, '1.5×']], closestRate(S.rate)) + '</div>';
   h += '<div class="grp"><p class="grp-t">Sleep timer · ' + esc(sleepLabel()) + '</p>' + seg('segSleep', [['0', 'Off'], ['15', '15 min'], ['30', '30 min'], ['45', '45 min'], ['60', '1 hour'], ['page', 'End of page']], SL.end ? 'x' : SL.page ? 'page' : '0') + '</div>';
+  if (chantOn() || (DOC && DOC.kind === 'gita')) h += '<div class="grp"><label class="toggle"><input type="checkbox" id="popChant"' + (CHANT ? ' checked' : '') + '>Chant style: slower, with longer pauses</label></div>';
   h += '<div class="grp"><label class="toggle"><input type="checkbox" id="popAuto"' + (S.auto ? ' checked' : '') + '>Continue to the next page automatically</label></div>';
   h += '<div class="foot"><button type="button" class="btn" id="popTest">Play a sample</button><button type="button" class="btn quiet" id="popMore">Manage voices in Settings</button></div>';
   el.popBody.innerHTML = h;
@@ -1796,7 +1802,7 @@ el.popBody.addEventListener('click', async function (e) {
   }
   selectPackVoice(kind, id);
 });
-el.popBody.addEventListener('change', function (e) { if (e.target.id === 'popAuto') { S.auto = e.target.checked; save('auto'); el.autoAdv.checked = S.auto; } });
+el.popBody.addEventListener('change', function (e) { if (e.target.id === 'popChant') { CHANT = e.target.checked; store.set('chant', CHANT); toast(CHANT ? 'Chant style on.' : 'Chant style off.', 1500); } if (e.target.id === 'popAuto') { S.auto = e.target.checked; save('auto'); el.autoAdv.checked = S.auto; } });
 el.voiceBadge.onclick = openPop; el.tuneBtn.onclick = openPop;
 dragSheet(el.grabPop, el.pop, function () { closePop(); });
 
