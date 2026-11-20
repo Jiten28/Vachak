@@ -25,6 +25,17 @@ button { cursor: pointer; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 
+/* themed scrollbars: slim rounded thumb, no arrow buttons, accent on hover (mouse devices only) */
+@media (hover: hover) and (pointer: fine) {
+  *::-webkit-scrollbar { width: 12px; height: 12px; }
+  *::-webkit-scrollbar-track, *::-webkit-scrollbar-corner { background: transparent; }
+  *::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+  *::-webkit-scrollbar-thumb { background: var(--sb-thumb); border-radius: 99px; border: 3px solid transparent; background-clip: content-box; min-height: 40px; }
+  *:hover::-webkit-scrollbar-thumb { background: var(--sb-thumb-h); background-clip: content-box; }
+  *::-webkit-scrollbar-thumb:hover, *::-webkit-scrollbar-thumb:active { background: var(--accent-fg); background-clip: content-box; }
+}
+@supports (-moz-appearance: none) { * { scrollbar-width: thin; scrollbar-color: var(--sb-thumb-h) transparent; } }
+:root { --sb-thumb: color-mix(in srgb, var(--ink) 22%, transparent); --sb-thumb-h: color-mix(in srgb, var(--ink) 42%, transparent); }
 .app { height: 100%; display: grid; grid-template-columns: 276px minmax(0, 1fr); gap: 20px; }
 
 /* ---------- rail ---------- */
@@ -198,11 +209,15 @@ body.dragging .sheet { outline: 2px dashed var(--accent); outline-offset: -8px; 
   .app[data-rail="collapsed"] { grid-template-columns: 0 minmax(0, 1fr); gap: 0; }
   .app[data-rail="collapsed"] .rail { visibility: hidden; opacity: 0; overflow: hidden; pointer-events: none; padding: 0; }
   .rail { transition: opacity .18s ease, visibility 0s; }
-  /* the whole library column scrolls, so nothing below the fold is ever clipped */
-  .rail { overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-gutter: stable; padding-bottom: 16px; }
-  .rail > * { flex-shrink: 0; }
-  .rail .toc-wrap { flex: none; }
+  /* header (logo, Open a PDF, Install) stays pinned; everything under it scrolls */
+  .rail { overflow: hidden; padding-bottom: 10px; }
+  .rail > .brand, .rail > .drop { flex: none; }
+  .rail-scroll { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 18px; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain;
+    margin-right: -4px; padding: 2px 8px 30px 0;
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent 100%); mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent 100%); }
+  .rail-scroll > * { flex: none; }
   .rail .toc { overflow: visible; }
+  .rail-scroll::-webkit-scrollbar-track { margin: 6px 0; }
 }
 .scrim.clear { background: transparent; }
 .mq { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
@@ -277,7 +292,7 @@ body.dragging .sheet { outline: 2px dashed var(--accent); outline-offset: -8px; 
 :root[data-platform="windows"] .toggle input:checked::after { background: var(--accent-ink); transform: translateX(21px); }
 :root[data-platform="windows"] .toggle input:active::after { width: 16px; }
 :root[data-platform="windows"] .pop, :root[data-platform="windows"] .panel { border-radius: 8px; }
-:root[data-platform="windows"] ::-webkit-scrollbar { width: 12px; height: 12px; } :root[data-platform="windows"] ::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--ink) 28%, transparent); border-radius: 6px; border: 3px solid transparent; background-clip: content-box; }
+/* scrollbars: see "themed scrollbars" near the top (all desktop platforms) */
 /* Mac: frosted sidebar, soft segmented control, switch toggles */
 :root[data-platform="mac"] .rail { background: color-mix(in srgb, var(--panel) 58%, transparent); -webkit-backdrop-filter: blur(30px) saturate(1.8); backdrop-filter: blur(30px) saturate(1.8); border: 1px solid color-mix(in srgb, var(--line) 70%, transparent); border-radius: 12px; padding: 12px 10px 0; }
 :root[data-platform="mac"] .toc button, :root[data-platform="mac"] .lib button { border-radius: 7px; }
@@ -311,8 +326,9 @@ body.dragging .sheet { outline: 2px dashed var(--accent); outline-offset: -8px; 
 .vbadge[data-s="error"] .dot { background: var(--danger); }
 .vbadge span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .play { position: relative; }
-.play.busy::after { content: ""; position: absolute; inset: -5px; border-radius: inherit; border: 3px solid transparent; border-top-color: var(--accent-fg); border-right-color: var(--accent-fg); animation: vspin .9s linear infinite; }
-.play.busy svg { opacity: .75; }
+.play.busy::after { content: ""; position: absolute; inset: 5px; border-radius: 50%; box-sizing: border-box; border: 3px solid color-mix(in srgb, var(--accent-ink) 22%, transparent); border-top-color: var(--accent-ink); animation: vspin .9s linear infinite; pointer-events: none; }
+.play.busy svg { opacity: .35; }
+.play { flex: none; aspect-ratio: 1; }
 .bufbar { height: 3px; border-radius: 3px; background: var(--line); overflow: hidden; position: relative; }
 .bufbar[hidden] { display: none; }
 .bufbar i { position: absolute; top: 0; bottom: 0; width: 38%; background: var(--accent); border-radius: 3px; animation: vslide 1.3s ease-in-out infinite; }
@@ -396,6 +412,7 @@ body.dragging .sheet { outline: 2px dashed var(--accent); outline-offset: -8px; 
 html, body { overscroll-behavior: none; }
 .panel .body { min-height: 0; flex: 1 1 auto; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-y; padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px)); }
 .rail, .pop, .toc { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+@media (max-width: 860px) { .rail-scroll { display: contents; } }
 .rail { touch-action: pan-y; }
 @media (max-width: 860px) {
   .panel { max-height: 92vh; max-height: 92dvh; }
@@ -465,6 +482,7 @@ html, body { overscroll-behavior: none; }
       <button class="btn" id="installBtn" type="button" hidden style="margin-top:8px;width:100%"><svg class="i"><use href="#i-down"/></svg><span id="installTxt">Install app</span></button>
       <small>Or drop a file anywhere. It never leaves your device.</small>
     </div>
+    <div class="rail-scroll" id="railScroll">
     <div id="contWrap" hidden>
       <p class="sec-label">Continue reading</p>
       <div class="card" id="contCard"></div>
@@ -491,6 +509,7 @@ html, body { overscroll-behavior: none; }
     <div class="toc-wrap">
       <p class="sec-label" id="tocLabel">Contents</p>
       <nav class="toc" id="toc" aria-labelledby="tocLabel"></nav>
+    </div>
     </div>
   </aside>
 
