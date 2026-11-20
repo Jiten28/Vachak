@@ -198,6 +198,11 @@ body.dragging .sheet { outline: 2px dashed var(--accent); outline-offset: -8px; 
   .app[data-rail="collapsed"] { grid-template-columns: 0 minmax(0, 1fr); gap: 0; }
   .app[data-rail="collapsed"] .rail { visibility: hidden; opacity: 0; overflow: hidden; pointer-events: none; padding: 0; }
   .rail { transition: opacity .18s ease, visibility 0s; }
+  /* the whole library column scrolls, so nothing below the fold is ever clipped */
+  .rail { overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-gutter: stable; padding-bottom: 16px; }
+  .rail > * { flex-shrink: 0; }
+  .rail .toc-wrap { flex: none; }
+  .rail .toc { overflow: visible; }
 }
 .scrim.clear { background: transparent; }
 .mq { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
@@ -872,7 +877,7 @@ function markCurrent() {
 
 var statusMsg = '';
 var seekDrag = false;
-var VB = { st: 'idle', stage: '', t0: 0, tick: null, wait: false };
+var VB = { st: 'idle', stage: '', t0: 0, tick: null, wait: false, mb: 0 };
 var STAGE_TXT = { engine: 'Preparing the voice engine', voice: 'Loading the voice model', start: 'Warming up (first time only)', speak: 'Almost ready' };
 function activeVoiceName() {
   if (S.engine === 'pack') { var id = S.pVoiceHi; return id ? Pack.label(id).split(' (')[0] : ''; }
@@ -884,7 +889,7 @@ function renderBadge() {
   var eng = S.engine || 'browser', st = 'idle', txt;
   if (eng === 'pack' && PATHS.pack) {
     var nm = ''; try { nm = activeVoiceName(); } catch (e) {}
-    if (VB.st === 'loading') { st = 'loading'; txt = (STAGE_TXT[VB.stage] || 'Loading the natural voice') + '… ' + Math.max(0, Math.round((Date.now() - VB.t0) / 1000)) + 's'; }
+    if (VB.st === 'loading') { st = 'loading'; txt = (STAGE_TXT[VB.stage] || 'Loading the natural voice') + (VB.mb >= 1 && VB.stage !== 'speak' ? ' · ' + Math.round(VB.mb) + ' MB' : '') + '… ' + Math.max(0, Math.round((Date.now() - VB.t0) / 1000)) + 's'; }
     else if (VB.st === 'error') { st = 'error'; txt = 'Natural voice failed. Tap to check'; }
     else if (S.pVoiceHi && Pack.isWarm(S.pVoiceHi)) { st = 'ready'; txt = 'Natural voice ready' + (nm ? ' · ' + nm : ''); }
     else { txt = 'Natural voice selected' + (nm ? ' · ' + nm : '') + ' · loads on play'; }
@@ -898,7 +903,7 @@ function renderBadge() {
 function setVBState(st, stg) {
   VB.st = st; VB.stage = stg || '';
   if (st === 'loading') { if (!VB.t0) VB.t0 = Date.now(); if (!VB.tick) VB.tick = setInterval(renderBadge, 1000); }
-  else { VB.t0 = 0; if (VB.tick) { clearInterval(VB.tick); VB.tick = null; } }
+  else { VB.t0 = 0; VB.mb = 0; if (VB.tick) { clearInterval(VB.tick); VB.tick = null; } }
   renderBadge();
 }
 function maybeWarm() {
@@ -1102,7 +1107,7 @@ var Pack = (function () {
   var LOCAL = 'voices/', HF = 'https://huggingface.co/rhasspy/piper-voices/resolve/main/', CACHE = 'vachak-voices-v1';
   var VENDOR = ['vendor/piper/PhonemizeWebWorker.js', 'vendor/piper/OnnxWebWorker.js', 'vendor/piper/piper_phonemize.wasm', 'vendor/piper/piper_phonemize.data', 'vendor/piper/onnx/ort-wasm-simd-threaded.wasm'];
   var VENDOR_MB = [0.1, 15.6, 0.6, 18.1, 10.4];
-  var SAFE_ID = /^[a-z]{2,3}_[A-Za-z]{2,4}-[A-Za-z0-9_]+-[a-z_]+$/, SAFE_PATH = /^[A-Za-z0-9_\-]+(\/[A-Za-z0-9_\-]+)*\.onnx(\.json)?$/, warmed = {}, stageFn = null;
+  var SAFE_ID = /^[a-z]{2,3}_[A-Za-z]{2,4}-[A-Za-z0-9_]+-[a-z_]+$/, SAFE_PATH = /^[A-Za-z0-9_\-]+(\/[A-Za-z0-9_\-]+)*\.onnx(\.json)?$/, warmed = {}, stageFn = null, progFn = null;
   var catalog = null, origin = null, ph = null, on = null, chain = Promise.resolve(), mem = {}, jobs = {}, order = [];
   function abs(p) { return new URL(p, location.href).href; }
   function noop() {}
@@ -1183,7 +1188,7 @@ var Pack = (function () {
     if (ph) return;
     ph = new Worker('vendor/piper/PhonemizeWebWorker.js', { type: 'module' }); on = new Worker('vendor/piper/OnnxWebWorker.js', { type: 'module' });
     ph.postMessage({ type: 'constructor', data: { basePath: abs('vendor/piper/') } });
-    on.postMessage({ type: 'constructor', data: { basePath: abs('vendor/piper/onnx/'), numThreads: 1 } });
+    on.postMessage({ type: 'constructor', data: { basePath: abs('vendor/piper/onnx/'), numThreads: (self.crossOriginIsolated ? Math.max(1, Math.min(4, (navigator.hardwareConcurrency || 2) - 1)) : 1) } });
   }
   function reset() { try { if (ph) ph.terminate(); if (on) on.terminate(); } catch (e) {} ph = on = null; }
   function ask(w, type, data) {
@@ -1196,6 +1201,7 @@ var Pack = (function () {
   }
   // One sentence in, a WAV object URL out. Jobs run one at a time; a job from an old playback run is skipped.
   function synth(text, id, tk, onbytes) {
+    onbytes = onbytes || progFn;
     var key = id + '|' + text;
     if (jobs[key]) return jobs[key];
     var job = chain.then(async function () {
@@ -1232,7 +1238,7 @@ var Pack = (function () {
   }
   async function remove() { reset(); warmed = {}; mem = {}; jobs = {}; order = []; engineOK = false; try { await caches.delete(CACHE); } catch (e) {} }
   function warm(id) { return synth(/^hi_|^ne_|^sa_/.test(id) ? 'नमस्ते।' : 'Hello.', id); }
-  return { warm: warm, isWarm: function (id) { return !!warmed[id]; }, onstage: function (f) { stageFn = f; }, peekLocal: peekLocal, catalog: loadCatalog, list: list, label: label, defaults: pickDefaults, installed: installed, engineReady: engineReady, synth: synth, install: install, remove: remove, origin: function () { return origin; } };
+  return { warm: warm, isWarm: function (id) { return !!warmed[id]; }, onstage: function (f) { stageFn = f; }, onprogress: function (f) { progFn = f; }, peekLocal: peekLocal, catalog: loadCatalog, list: list, label: label, defaults: pickDefaults, installed: installed, engineReady: engineReady, synth: synth, install: install, remove: remove, origin: function () { return origin; } };
 })();
 
 /* ---------- speaking ---------- */
@@ -1314,9 +1320,11 @@ async function speakPack(u, kind, t) {
   var got = 0; setStatus(Pack.isWarm(id) ? '' : 'Preparing the natural voice… the first line takes a few seconds');
   var url;
   VB.wait = true; renderBadge();
-  try { url = await Pack.synth(u.speech, id, t, function (n) { got += n; setStatus('Downloading the voice, ' + Math.round(got / 1e6) + ' MB…'); }); } finally { VB.wait = false; setStatus(''); renderBadge(); }
+  var cur = Pack.synth(u.speech, id, t, function (n) { got += n; VB.mb += n / 1e6; setStatus('Downloading the voice, ' + Math.round(got / 1e6) + ' MB…'); });
+  // queue the next lines right away so the engine never sits idle while this one plays
+  [1, 2, 3].forEach(function (k) { var nu = P.model && P.model.units[P.idx + k]; if (nu && nu.ok) Pack.synth(nu.speech, idFor(unitKind(nu) === 'en' ? 'en' : 'hi'), t).catch(function () {}); });
+  try { url = await cur; } finally { VB.wait = false; setStatus(''); renderBadge(); }
   if (t !== P.token || !url) return;
-  [1, 2].forEach(function (k) { var nu = P.model && P.model.units[P.idx + k]; if (nu && nu.ok) Pack.synth(nu.speech, idFor(unitKind(nu) === 'en' ? 'en' : 'hi'), t).catch(function () {}); });
   await new Promise(function (res, rej) {
     var a = sharedAudio(); a.src = url; a.volume = sleepVol(); a.playbackRate = Math.max(0.6, Math.min(1.6, S.rate));
     a.onended = res; a.onerror = function () { rej(new Error('Could not play the audio.')); };
@@ -1945,6 +1953,7 @@ if (window.speechSynthesis) speechSynthesis.onvoiceschanged = function () { load
 if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = PATHS.pdfWorker;
 el.modeBtn.onclick = function () { S.mode = resolvedTheme() === 'dark' ? 'light' : 'dark'; save('mode'); applyTheme(); };
 if (PATHS.pack && S.engine == null) Pack.peekLocal().then(function (ok) { if (ok && S.engine == null) { S.engine = 'pack'; checkVoiceQuality(); toast('Natural voice is selected. Getting it ready…', 4500); } }).then(function () { renderBadge(); maybeWarm(); });
+var _pgT = 0; Pack.onprogress(function (n) { VB.mb += n / 1e6; var t = Date.now(); if (t - _pgT > 400) { _pgT = t; renderBadge(); } });
 Pack.onstage(function (stg) { if (stg === 'ready') setVBState('ready'); else if (stg === 'error') setVBState('error'); else setVBState('loading', stg); });
 renderBadge();
 (window.requestIdleCallback || function (f) { setTimeout(f, 1200); })(function () { maybeWarm(); }, { timeout: 4000 });
