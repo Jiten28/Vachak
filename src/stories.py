@@ -2,7 +2,10 @@
 # Add a language by adding books with a new "lang" code; the library groups shelves by language.
 import json, os
 B = []
-def book(id, lang, title, sub, chapters): B.append(dict(id=id, lang=lang, title=title, sub=sub, ch=[dict(t=t, p=p) for t, p in chapters]))
+def book(id, lang, title, sub, chapters, cat='story'):
+    # a later book() with the same id replaces the earlier one
+    B[:] = [x for x in B if x['id'] != id]
+    B.append(dict(id=id, lang=lang, title=title, sub=sub, cat=cat, ch=[dict(t=t, p=p) for t, p in chapters]))
 
 # ------------------------------ हिन्दी ------------------------------
 book('hi-khargosh', 'hi', 'चतुर खरगोश और शेर', 'पंचतंत्र की कथा', [
@@ -168,7 +171,8 @@ book('en-golden-egg', 'en', 'The Goose and the Golden Eggs', 'A fable', [
   'The couple sat in silence. Their greed had cost them the one thing that had made them rich.',
   'Moral: be patient and grateful for what you have. Greed can destroy the very thing that brings you good fortune.'])])
 
-for _f in ('stories_long.py','stories_night.py'):
+for _f in ('stories_long.py','stories_night.py','stories_expanded.py','stories_spiritual.py','stories_bn.py'):
+    if not os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)),_f)): continue
     exec(compile(open(os.path.join(os.path.dirname(os.path.abspath(__file__)),_f),encoding='utf-8').read(),_f,'exec'))
 
 def paginate(b, target=150, cap=210):

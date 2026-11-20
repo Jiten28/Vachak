@@ -386,6 +386,46 @@ body.dragging .sheet { outline: 2px dashed var(--accent); outline-offset: -8px; 
 }
 @media (prefers-contrast: more) { :root { --shadow: none; } .sheet, .dock, .card { border-width: 2px; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+
+/* ---- v9: iPhone scroll fix, shelves, saved, search, sleep, stats ---- */
+html, body { overscroll-behavior: none; }
+.panel .body { min-height: 0; flex: 1 1 auto; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-y; padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px)); }
+.rail, .pop, .toc { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+.rail { touch-action: pan-y; }
+@media (max-width: 860px) {
+  .panel { max-height: 92vh; max-height: 92dvh; }
+  .rail { max-height: 88vh; max-height: 88dvh; }
+  .pop { max-height: 72vh; max-height: min(72dvh, 600px); }
+}
+.u.hl { background: var(--accent-soft); box-shadow: 0 2px 0 var(--accent); }
+.u.on.hl { background: var(--mark); color: var(--mark-ink); }
+.icon-btn[aria-pressed="true"] { color: var(--accent-fg); background: var(--accent-soft); }
+.shelf-h { font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin: 16px 2px 6px; }
+.item { display: flex; gap: 10px; align-items: flex-start; width: 100%; text-align: left; background: var(--sheet); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin: 0 0 8px; }
+.item .tx { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.item .tx b { font-weight: 600; overflow-wrap: anywhere; }
+.item .tx small { color: var(--ink-3); font-size: .78rem; }
+.item mark { background: var(--mark); color: var(--mark-ink); border-radius: 3px; padding: 0 1px; }
+.item .rm { flex: none; background: transparent; border: 0; color: var(--ink-3); padding: 4px 8px; border-radius: 8px; }
+.srch { display: flex; gap: 8px; position: sticky; top: 0; background: var(--panel); padding: 6px 0 10px; z-index: 2; }
+.srch input { flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--sheet); border-radius: 10px; padding: 10px 12px; }
+.mini { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; align-items: end; height: 70px; margin-top: 6px; }
+.mini i { display: block; background: var(--accent); border-radius: 4px 4px 0 0; min-height: 2px; opacity: .85; }
+.mini span { display: grid; align-items: end; height: 100%; }
+.minil { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; font-size: .68rem; color: var(--ink-3); text-align: center; }
+.statrow { display: flex; gap: 16px; flex-wrap: wrap; }
+.statrow div { display: grid; }
+.statrow b { font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+.statrow small { color: var(--ink-3); }
+.cardx { background: var(--sheet); border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: grid; gap: 6px; }
+.cardx .v { font-family: var(--f-read, inherit); font-size: 1.05rem; line-height: 1.6; }
+.cardx .btn { justify-self: start; }
+[lang="bn"] { font-family: 'Noto Serif Bengali', 'Noto Sans Bengali', 'Nirmala UI', 'Kohinoor Bangla', 'Bangla Sangam MN', 'Vrinda', var(--f-read, serif); }
+[lang="te"] { font-family: 'Noto Sans Telugu', 'Nirmala UI', 'Kohinoor Telugu', 'Telugu Sangam MN', sans-serif; }
+.sleepdot { position: relative; }
+.sleepdot::after { content: ""; position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.pron { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; }
+.pron input, .pron-in { border: 1px solid var(--line); background: var(--sheet); border-radius: 10px; padding: 9px 10px; min-width: 0; }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -405,6 +445,8 @@ body.dragging .sheet { outline: 2px dashed var(--accent); outline-offset: -8px; 
   <symbol id="i-book" viewBox="0 0 24 24"><path d="M12 6.5C10 5 7 4.6 3.8 5.2v12.6C7 17.2 10 17.6 12 19.2c2-1.6 5-2 8.2-1.4V5.2C17 4.6 14 5 12 6.5ZM12 6.5v12.7"/></symbol>
   <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h8.5M17 7h3M4 17h3M11.5 17H20"/><circle cx="14.8" cy="7" r="2.2"/><circle cx="9.2" cy="17" r="2.2"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+  <symbol id="i-mark" viewBox="0 0 24 24"><path d="M7 4h10a1 1 0 0 1 1 1v15l-6-4-6 4V5a1 1 0 0 1 1-1Z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></symbol>
 </svg>
 
 <a class="sr" href="#stage">Skip to the reader</a>
@@ -418,6 +460,10 @@ body.dragging .sheet { outline: 2px dashed var(--accent); outline-offset: -8px; 
       <button class="btn" id="installBtn" type="button" hidden style="margin-top:8px;width:100%"><svg class="i"><use href="#i-down"/></svg><span id="installTxt">Install app</span></button>
       <small>Or drop a file anywhere. It never leaves your device.</small>
     </div>
+    <div id="contWrap" hidden>
+      <p class="sec-label">Continue reading</p>
+      <div class="card" id="contCard"></div>
+    </div>
     <div>
       <p class="sec-label">Now reading</p>
       <div class="card" id="docCard"></div>
@@ -427,8 +473,15 @@ body.dragging .sheet { outline: 2px dashed var(--accent); outline-offset: -8px; 
       <div class="lib">
         <button type="button" id="libGita"><b>Bhagavad Gita</b><span>701 slokas · 18 chapters · Sanskrit</span></button>
         <button type="button" id="libStories"><b>Story shelf</b><span id="libStoriesSub">Stories in Hindi and English</span></button>
+        <button type="button" id="libSpiritual"><b>Spiritual shelf</b><span id="libSpiritualSub">Hanuman Chalisa, mantras, aartis</span></button>
+        <button type="button" id="libSearch"><b>Search in this book</b><span>Find a word, a line or a sloka</span></button>
+        <button type="button" id="libSaved"><b>Bookmarks and highlights</b><span id="libSavedSub">Saved lines</span></button>
         <button type="button" id="libPaste"><b>Paste any text</b><span>Hindi, Sanskrit or English</span></button>
       </div>
+    </div>
+    <div id="dayWrap">
+      <p class="sec-label">Today</p>
+      <div class="card" id="dayCard"></div>
     </div>
     <div class="toc-wrap">
       <p class="sec-label" id="tocLabel">Contents</p>
@@ -450,6 +503,8 @@ body.dragging .sheet { outline: 2px dashed var(--accent); outline-offset: -8px; 
         <span class="tot" id="pgTot">/ 1</span>
         <button class="icon-btn" id="pgNext" type="button" aria-label="Next page"><svg class="i"><use href="#i-right"/></svg></button>
       </div>
+      <button class="icon-btn" id="bmBtn" type="button" aria-pressed="false" aria-label="Bookmark this line"><svg class="i"><use href="#i-mark"/></svg></button>
+      <button class="icon-btn hide-sm" id="srchBtn" type="button" aria-label="Search in this book"><svg class="i"><use href="#i-search"/></svg></button>
       <button class="icon-btn hide-sm" id="fontDown" type="button" aria-label="Smaller text"><span style="font-weight:700;font-size:.8rem">A−</span></button>
       <button class="icon-btn hide-sm" id="fontUp" type="button" aria-label="Larger text"><span style="font-weight:700;font-size:1.05rem">A+</span></button>
       <button class="icon-btn" id="modeBtn" type="button" aria-label="Switch colour mode"><svg class="i" id="modeIcon"><use href="#i-moon"/></svg></button>
@@ -517,7 +572,7 @@ var $ = function (s) { return document.querySelector(s); };
 var el = {};
 ['app','rail','menuBtn','openBtn','fileInput','docCard','libGita','libPaste','toc','tocLabel','tabText','tabPage','tabs','pgPrev','pgNext','pgInput','pgTot',
  'fontDown','fontUp','setBtn','stage','textView','pageView','loading','loadMsg','loadBar','seek','prevU','playBtn','playIcon','nextU','nowTitle','nowSub',
- 'rateSel','autoAdv','dock','pop','popBody','tuneBtn','libStories','libStoriesSub','grabPop','voiceBadge','voiceBadgeTxt','bufbar','voiceTip','tabbar','grabRail','grabPanel','installBtn','installTxt','modeBtn','modeIcon','scrim','panel','panelBody','panelTitle','panelClose','toast'].forEach(function (id) { el[id] = document.getElementById(id); });
+ 'rateSel','autoAdv','dock','pop','popBody','tuneBtn','libStories','libStoriesSub','libSpiritual','libSpiritualSub','libSearch','libSaved','libSavedSub','contWrap','contCard','dayCard','bmBtn','srchBtn','grabPop','voiceBadge','voiceBadgeTxt','bufbar','voiceTip','tabbar','grabRail','grabPanel','installBtn','installTxt','modeBtn','modeIcon','scrim','panel','panelBody','panelTitle','panelClose','toast'].forEach(function (id) { el[id] = document.getElementById(id); });
 
 /* ---------- storage ---------- */
 var store = {
@@ -584,7 +639,7 @@ function splitSentences(s) {
   return out;
 }
 function toSpeech(s) {
-  return s.replace(/[​-‍﻿]/g, '')
+  return applyPron(s).replace(/[​-‍﻿]/g, '')
     .replace(/[‘’“”"«»\[\]*_#|~^]/g, ' ')
     .replace(/[—–]/g, ', ')
     .replace(/[।॥]+\s*[\d०-९][\d०-९.\-–,]*\s*[।॥]+/g, ' । ')
@@ -592,7 +647,7 @@ function toSpeech(s) {
     .replace(/।{2,}/g, ' । ')
     .replace(/\s+/g, ' ').trim();
 }
-function isSpeakable(sp) { return /[ऄ-ॣA-Za-z]/.test(sp); }
+function isSpeakable(sp) { return /[ऄ-ॣঀ-૿ఀ-౿A-Za-z]/.test(sp); }
 
 // Turns the text of one page into speakable units, keeping a link back to the PDF lines each unit came from.
 function buildUnits(lines) {
@@ -768,6 +823,8 @@ function renderText() {
   spans = Array.prototype.slice.call(el.textView.querySelectorAll('.u'));
   var byIdx = {}; spans.forEach(function (s) { byIdx[s.dataset.i] = s; }); spans.byIdx = byIdx;
   el.stage.scrollTop = 0;
+  if (DOC && DOC.kind === 'book') el.textView.setAttribute('lang', DOC.book.lang); else el.textView.removeAttribute('lang');
+  applyHl();
 }
 
 var renderTask = null, ovs = [];
@@ -870,6 +927,7 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitAllMq);
 function setStatus(m) { statusMsg = m || ''; if (el.nowSub) updateNow(); }
 function updateNow() {
   var m = P.model, n = DOC ? DOC.pages : 1;
+  updateBm(); noteLast();
   var unitLabel = DOC && DOC.kind === 'gita' ? 'Chapter' : 'Page';
   el.pgInput.value = P.page; el.pgTot.textContent = '/ ' + fmt(n);
   var frac = Math.min(1, ((P.page - 1) + (m && m.units.length ? Math.min(1, P.idx / m.units.length) : 0)) / Math.max(1, n));
@@ -938,6 +996,82 @@ function setPlayUI() {
   if ('mediaSession' in navigator) { try { navigator.mediaSession.playbackState = P.playing ? 'playing' : 'paused'; } catch (e) {} }
 }
 
+
+/* ---------- v9: stats, saved lines, last read, pronunciation, sleep timer ---------- */
+function dayKey(d) { d = d || new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+var ST = store.get('stats', { days: {} }); if (!ST.days) ST.days = {};
+var statT = 0;
+function stat(k, n) {
+  var o = ST.days[dayKey()] || (ST.days[dayKey()] = { pages: 0, units: 0, secs: 0 }); o[k] = (o[k] || 0) + n;
+  if (!statT) statT = setTimeout(function () { statT = 0; var keys = Object.keys(ST.days).sort(); while (keys.length > 120) delete ST.days[keys.shift()]; store.set('stats', ST); renderDay(); }, 2500);
+}
+function streakDays() {
+  var n = 0, d = new Date();
+  function act(dt) { var o = ST.days[dayKey(dt)]; return o && (o.secs >= 30 || o.pages > 0); }
+  if (!act(d)) d.setDate(d.getDate() - 1);
+  while (act(d)) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+function dayInfo(dt) { var o = ST.days[dayKey(dt)] || {}; return { pages: o.pages || 0, mins: Math.round((o.secs || 0) / 60) }; }
+function renderDay() {
+  if (!el.dayCard) return;
+  var t = dayInfo(), sk = streakDays();
+  el.dayCard.innerHTML = '<div class="statrow"><div><b>' + t.pages + '</b><small>pages read</small></div><div><b>' + t.mins + '</b><small>minutes</small></div><div><b>' + sk + '</b><small>day streak</small></div></div>';
+}
+var saved = store.get('saved', []);
+function saveSaved() { if (saved.length > 600) saved = saved.slice(-600); store.set('saved', saved); renderSavedCount(); }
+function renderSavedCount() { if (el.libSavedSub) el.libSavedSub.textContent = saved.length ? saved.length + ' saved line' + (saved.length === 1 ? '' : 's') : 'Press and hold a line to highlight it'; }
+function findSaved(h, p, i) { for (var k = 0; k < saved.length; k++) { var x = saved[k]; if (x.k === (DOC && DOC.key) && x.h === h && x.p === p && x.i === i) return k; } return -1; }
+function curSnippet() { var u = P.model && P.model.units[P.idx]; return u ? u.text.replace(/\s+/g, ' ').trim().slice(0, 90) : ''; }
+function toggleSaved(h, i) {
+  if (!DOC || !P.model || DOC.kind === 'text') { toast('Open a book first.'); return; }
+  i = i === undefined ? P.idx : i; var k = findSaved(h, P.page, i);
+  if (k >= 0) { saved.splice(k, 1); toast(h ? 'Highlight removed.' : 'Bookmark removed.', 1600); }
+  else { var u = P.model.units[i]; if (!u) return; saved.push({ k: DOC.key, d: DOC.title, kind: DOC.kind, p: P.page, i: i, t: u.text.replace(/\s+/g, ' ').trim().slice(0, 90), h: h, ts: Date.now() }); toast(h ? 'Line highlighted.' : 'Bookmarked.', 1600); }
+  saveSaved(); applyHl(); updateBm();
+}
+function applyHl() {
+  if (!DOC) return;
+  spans.forEach(function (sp) { sp.classList.remove('hl'); });
+  saved.forEach(function (x) { if (x.h && x.k === DOC.key && x.p === P.page && spans.byIdx && spans.byIdx[x.i]) spans.byIdx[x.i].classList.add('hl'); });
+}
+function updateBm() { if (el.bmBtn) el.bmBtn.setAttribute('aria-pressed', String(!!DOC && findSaved(0, P.page, P.idx) >= 0)); }
+var lastT = 0;
+function noteLast() {
+  if (!DOC || DOC.kind === 'text') return;
+  var now = Date.now(); if (now - lastT < 4000) return; lastT = now;
+  store.set('last', { kind: DOC.kind, id: DOC.book ? DOC.book.id : '', key: DOC.key, title: DOC.title, p: P.page, i: P.idx, n: DOC.pages });
+}
+function renderContinue() {
+  var l = store.get('last', null); if (!l || !l.title || (DOC && DOC.key === l.key)) { el.contWrap.hidden = true; return; }
+  el.contWrap.hidden = false;
+  var can = l.kind === 'gita' || l.kind === 'book';
+  var unit = l.kind === 'gita' ? 'Chapter' : 'Page';
+  el.contCard.innerHTML = '<div class="doc-title">' + esc(l.title) + '</div><div class="doc-meta">' + unit + ' ' + l.p + ' of ' + l.n + (can ? '' : ' · open the PDF again to continue') + '</div>' + (can ? '<div class="chip-row"><button type="button" class="btn" id="contGo">Continue</button></div>' : '');
+  var b = $('#contGo'); if (b) b.onclick = async function () { closeRail(); if (l.kind === 'gita') await openGita(); else await openBook(l.id); play(); };
+}
+var PRON = store.get('pron', []);
+function applyPron(t) {
+  if (!PRON.length) return t;
+  PRON.slice().sort(function (a, b) { return b[0].length - a[0].length; }).forEach(function (r) {
+    try { t = t.replace(new RegExp(r[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'giu'), r[1]); } catch (e) {}
+  });
+  return t;
+}
+var SL = { end: 0, page: 0, t: 0 };
+function sleepVol() { if (!SL.end) return 1; var left = SL.end - Date.now(); return left > 30000 ? 1 : Math.max(0.15, left / 30000); }
+function setSleep(v) {
+  clearTimeout(SL.t); SL.end = 0; SL.page = 0;
+  if (v === 'page') { SL.page = P.page; toast('Will stop at the end of this page.', 2200); }
+  else if (+v > 0) { SL.end = Date.now() + (+v) * 60000; SL.t = setTimeout(sleepNow, (+v) * 60000 + 25000); toast('Sleep timer set for ' + v + ' minutes.', 2200); }
+  else toast('Sleep timer off.', 1500);
+  if (audioEl) audioEl.volume = 1;
+  el.tuneBtn.classList.toggle('sleepdot', !!(SL.end || SL.page));
+}
+function sleepNow() { SL.end = 0; SL.page = 0; clearTimeout(SL.t); el.tuneBtn.classList.remove('sleepdot'); if (P.playing) { pause(); toast('Sleep timer finished. Good night.', 4000); } if (audioEl) audioEl.volume = 1; }
+function sleepCheck(endOfPage) { if (SL.end && Date.now() >= SL.end) { sleepNow(); return true; } if (SL.page && endOfPage) { sleepNow(); return true; } return false; }
+function sleepLabel() { return SL.end ? 'Stops at ' + new Date(SL.end).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : SL.page ? 'Stops at the end of this page' : 'Off'; }
+
 /* ---------- voices ---------- */
 var voices = [];
 function loadVoices() { try { voices = window.speechSynthesis ? speechSynthesis.getVoices() : []; } catch (e) { voices = []; } }
@@ -947,18 +1081,18 @@ function vscore(v) {
   if (!v.localService) s += 10; if (/compact|espeak/.test(n)) s -= 30; return s;
 }
 function voiceList(kind) {
-  var re = kind === 'en' ? /^en/i : /^(hi|sa|mr|ne)/i;
+  var re = kind === 'en' ? /^en/i : kind === 'hi' ? /^(hi|sa|mr|ne)/i : new RegExp('^' + kind, 'i');
   return voices.filter(function (v) { return re.test(v.lang); }).sort(function (a, b) {
     var pa = kind === 'en' ? (/en-in/i.test(a.lang) ? 1 : 0) : (/^hi/i.test(a.lang) ? 1 : 0), pb = kind === 'en' ? (/en-in/i.test(b.lang) ? 1 : 0) : (/^hi/i.test(b.lang) ? 1 : 0);
     return (pb * 100 + vscore(b)) - (pa * 100 + vscore(a));
   });
 }
 function pickVoice(kind) {
-  var list = voiceList(kind), want = kind === 'en' ? S.voiceEn : S.voiceHi;
+  var list = voiceList(kind), want = kind === 'en' ? S.voiceEn : kind === 'hi' ? S.voiceHi : '';
   var v = list.filter(function (x) { return x.voiceURI === want || x.name === want; })[0];
   return v || list[0] || null;
 }
-var warnedNoHindi = false;
+var warnedNoHindi = false, warnedLang = {};
 function voiceIsBasic() { var l = voiceList('hi'); return !l.length || vscore(l[0]) < 40; }
 function checkVoiceQuality() { el.voiceTip.hidden = !((S.engine || 'browser') === 'browser' && voiceIsBasic()); }
 
@@ -1114,6 +1248,7 @@ function stopAudio() {
   if (audioEl) { try { audioEl.onended = null; audioEl.onerror = null; audioEl.pause(); } catch (e) {} }
 }
 function unitKind(u) {
+  if (DOC && DOC.kind === 'book' && DOC.book.lang !== 'hi' && DOC.book.lang !== 'en') return DOC.book.lang;
   if (S.lang === 'en') return 'en';
   if (S.lang === 'hi' || S.lang === 'sa') return S.lang;
   if (DOC && DOC.kind === 'gita') return 'sa';
@@ -1131,13 +1266,14 @@ function chunkText(t, max) {
 function speakBrowser(text, kind, t) {
   return new Promise(function (res) {
     if (!window.speechSynthesis) { toast('This browser has no built-in speech. Try Chrome, Edge or Safari.'); P.token++; return res(); }
-    var vk = kind === 'en' ? 'en' : 'hi', v = pickVoice(vk), chunks = chunkText(text, 170), i = 0;
+    var vk = (kind === 'en' || kind === 'hi' || kind === 'sa') ? (kind === 'en' ? 'en' : 'hi') : kind, v = pickVoice(vk), chunks = chunkText(text, 170), i = 0;
     if (!v && vk === 'hi' && !warnedNoHindi) { warnedNoHindi = true; toast('No Hindi voice found on this device. Open settings for how to add one.', 6000); }
+    else if (!v && vk !== 'hi' && vk !== 'en' && !warnedLang[vk]) { warnedLang[vk] = 1; toast('No ' + (LNAME[vk] || vk) + ' voice found on this device. Add one in your phone\'s text-to-speech or Accessibility settings.', 7000); }
     function next() {
       if (t !== P.token || i >= chunks.length) return res();
       var ut = new SpeechSynthesisUtterance(chunks[i++]);
-      if (v) { ut.voice = v; ut.lang = v.lang; } else ut.lang = vk === 'en' ? 'en-IN' : 'hi-IN';
-      ut.rate = Math.max(0.3, Math.min(2, S.rate * (kind === 'sa' ? 0.94 : 1))); ut.pitch = 1;
+      if (v) { ut.voice = v; ut.lang = v.lang; } else ut.lang = vk === 'en' ? 'en-IN' : vk === 'hi' ? 'hi-IN' : vk + '-IN';
+      ut.rate = Math.max(0.3, Math.min(2, S.rate * (kind === 'sa' ? 0.94 : 1))); ut.pitch = 1; ut.volume = sleepVol();
       ut.onend = next;
       ut.onerror = function (e) { if (e && (e.error === 'interrupted' || e.error === 'canceled')) return res(); if (e && e.error === 'not-allowed') { toast('Tap play again to allow audio.'); P.token++; return res(); } next(); };
       try { speechSynthesis.speak(ut); } catch (err) { res(); }
@@ -1165,7 +1301,7 @@ async function speakCloud(text, kind, t) {
   // warm the next sentence while this one plays
   var nu = P.model && P.model.units[P.idx + 1]; if (nu && nu.ok) cloudFetch(nu.speech, unitKind(nu)).catch(function () {});
   await new Promise(function (res, rej) {
-    var a = sharedAudio(); a.src = url; a.playbackRate = 1; a.onended = res; a.onerror = function () { rej(new Error('audio')); };
+    var a = sharedAudio(); a.src = url; a.volume = sleepVol(); a.playbackRate = 1; a.onended = res; a.onerror = function () { rej(new Error('audio')); };
     a.play().catch(rej);
   });
 }
@@ -1182,13 +1318,14 @@ async function speakPack(u, kind, t) {
   if (t !== P.token || !url) return;
   [1, 2].forEach(function (k) { var nu = P.model && P.model.units[P.idx + k]; if (nu && nu.ok) Pack.synth(nu.speech, idFor(unitKind(nu) === 'en' ? 'en' : 'hi'), t).catch(function () {}); });
   await new Promise(function (res, rej) {
-    var a = sharedAudio(); a.src = url; a.playbackRate = Math.max(0.6, Math.min(1.6, S.rate));
+    var a = sharedAudio(); a.src = url; a.volume = sleepVol(); a.playbackRate = Math.max(0.6, Math.min(1.6, S.rate));
     a.onended = res; a.onerror = function () { rej(new Error('Could not play the audio.')); };
     a.play().catch(rej);
   });
 }
 async function speakUnit(u, t) {
-  var kind = unitKind(u);
+  var kind = unitKind(u), local = kind !== 'hi' && kind !== 'en' && kind !== 'sa';
+  if (local) { await speakBrowser(u.speech, kind, t); return; }
   if (S.engine === 'pack' && PATHS.pack) {
     try { await speakPack(u, kind, t); return; }
     catch (e) {
@@ -1224,13 +1361,18 @@ async function loop(t) {
       var u = m.units[P.idx];
       markCurrent();
       if (u.ok) {
+        var t0 = Date.now();
         await speakUnit(u, t);
         if (t !== P.token) return;
+        stat('units', 1); stat('secs', Math.min(60, (Date.now() - t0) / 1000));
+        if (sleepCheck(false)) return;
         await sleep(u.gap || S.gap, t);
         if (t !== P.token) return;
       }
       P.idx++; if (P.idx % 4 === 0) savePos();
     }
+    stat('pages', 1);
+    if (sleepCheck(true)) return;
     if (P.page >= DOC.pages) { toast('Reached the end.'); P.token++; return; }
     if (!S.auto) { toast('Finished this page.'); P.token++; return; }
     empties = m.units.some(function (u) { return u.ok; }) ? 0 : empties + 1;
@@ -1265,7 +1407,7 @@ async function openGita(startPage) {
   await showPage(startPage || (pos && pos.p) || 1, startPage ? 0 : (pos && pos.i) || 0);
   setPlayUI();
 }
-var LNAME = { hi: 'हिन्दी', en: 'English', sa: 'संस्कृतम्' };
+var LNAME = { hi: 'हिन्दी', en: 'English', sa: 'संस्कृतम्', bn: 'বাংলা', te: 'తెలుగు' };
 async function openBook(id, startPage) {
   var b = (window.STORIES || []).filter(function (x) { return x.id === id; })[0]; if (!b) return;
   resetDoc();
@@ -1276,22 +1418,27 @@ async function openBook(id, startPage) {
   setPlayUI();
 }
 function storyMinutes(b) { return Math.max(1, Math.round(b.w / (b.lang === 'en' ? 150 : 120))); }
-function buildStories(filter) {
-  var all = window.STORIES || [], langs = []; all.forEach(function (b) { if (langs.indexOf(b.lang) < 0) langs.push(b.lang); });
-  filter = filter || store.get('shelf', 'all'); if (filter !== 'all' && langs.indexOf(filter) < 0) filter = 'all';
+var shelfCat = 'story';
+function buildStories(filter, cat) {
+  cat = cat || shelfCat; shelfCat = cat;
+  var all = (window.STORIES || []).filter(function (b) { return (b.cat || 'story') === cat; }), langs = []; all.forEach(function (b) { if (langs.indexOf(b.lang) < 0) langs.push(b.lang); });
+  var sk = 'shelf.' + cat; filter = filter || store.get(sk, 'all'); if (filter !== 'all' && langs.indexOf(filter) < 0) filter = 'all';
   var opts = [['all', 'All']].concat(langs.map(function (l) { return [l, esc(LNAME[l] || l)]; }));
-  var h = '<div class="group"><div class="row">' + seg('segShelf', opts, filter) + '<span class="hint">Moral, motivational and bedtime stories, retold in simple language. More languages can be added to the shelf.</span></div><div id="shelfList">';
-  var list = all.filter(function (b) { return filter === 'all' || b.lang === filter; }).sort(function (a, b) { return b.w - a.w; });
-  [['Long reads for the night', 1400, 1e9], ['Break-time stories', 600, 1400], ['Quick stories', 0, 600]].forEach(function (g) {
-    var part = list.filter(function (b) { return b.w >= g[1] && b.w < g[2]; }); if (!part.length) return;
-    h += '<div class="shelf-h">' + g[0] + '</div>';
-    part.forEach(function (b) {
-      var mins = storyMinutes(b);
-      h += '<button type="button" class="story" data-id="' + esc(b.id) + '"><span class="cv" lang="' + esc(b.lang) + '" aria-hidden="true">' + esc(Array.from(b.title)[0]) + '</span><span class="tt"><b lang="' + esc(b.lang) + '">' + esc(b.title) + '</b><small>' + esc(b.sub) + '</small><span class="meta">' + esc(LNAME[b.lang] || b.lang) + ' · ' + b.pg.length + (b.pg.length === 1 ? ' page' : ' pages') + ' · about ' + mins + ' min</span></span></button>';
+  var h = '<div class="group"><div class="row">' + seg('segShelf', opts, filter) + '<span class="hint">' + (cat === 'spiritual' ? 'Prayers, mantras and aartis in their traditional words. Please check them against your own printed copy.' : 'Moral, motivational and bedtime stories, retold in simple language. More languages can be added to the shelf.') + '</span></div><div id="shelfList">';
+  var list = all.filter(function (b) { return filter === 'all' || b.lang === filter; });
+  function card(b) {
+    return '<button type="button" class="story" data-id="' + esc(b.id) + '"><span class="cv" lang="' + esc(b.lang) + '" aria-hidden="true">' + esc(Array.from(b.title)[0]) + '</span><span class="tt"><b lang="' + esc(b.lang) + '">' + esc(b.title) + '</b><small lang="' + esc(b.lang) + '">' + esc(b.sub) + '</small><span class="meta">' + esc(LNAME[b.lang] || b.lang) + ' · ' + b.pg.length + (b.pg.length === 1 ? ' page' : ' pages') + ' · about ' + storyMinutes(b) + ' min</span></span></button>';
+  }
+  if (cat === 'spiritual') list.forEach(function (b) { h += card(b); });
+  else {
+    list.sort(function (a, b) { return b.w - a.w; });
+    [['Long reads for the night', 1400, 1e9], ['Break-time stories', 600, 1400], ['Quick stories', 0, 600]].forEach(function (g) {
+      var part = list.filter(function (b) { return b.w >= g[1] && b.w < g[2]; }); if (!part.length) return;
+      h += '<div class="shelf-h">' + g[0] + '</div>'; part.forEach(function (b) { h += card(b); });
     });
-  });
+  }
   el.panelBody.innerHTML = h + '</div></div>';
-  $('#segShelf').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; store.set('shelf', b.dataset.v); buildStories(b.dataset.v); });
+  $('#segShelf').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; store.set(sk, b.dataset.v); buildStories(b.dataset.v, cat); });
   $('#shelfList').addEventListener('click', function (e) { var b = e.target.closest('.story'); if (!b) return; closePanel(); openBook(b.dataset.id); });
 }
 async function openText(text) {
@@ -1368,11 +1515,15 @@ async function gotoOutline(i) {
 
 /* ---------- settings ---------- */
 function openPanel(kind) {
+  el.panelBody.onclick = null;
   if (kind === 'paste') {
     el.panelTitle.textContent = 'Paste text to read';
     el.panelBody.innerHTML = '<div class="group paste-box"><div class="row"><label for="pasteTa">Text</label><textarea id="pasteTa" lang="hi" placeholder="यहाँ हिन्दी, संस्कृत या English text चिपकाएँ…"></textarea><span class="hint">Paragraphs are separated by a blank line.</span></div><button class="btn primary" id="pasteGo" type="button">Read this aloud</button></div>';
     $('#pasteGo').onclick = function () { var t = $('#pasteTa').value.trim(); if (!t) return toast('Paste some text first.'); closePanel(); openText(t).then(play); };
-  } else if (kind === 'stories') { el.panelTitle.textContent = 'Story shelf'; buildStories(); }
+  } else if (kind === 'stories') { el.panelTitle.textContent = 'Story shelf'; buildStories(null, 'story'); }
+  else if (kind === 'spiritual') { el.panelTitle.textContent = 'Spiritual shelf'; buildStories(null, 'spiritual'); }
+  else if (kind === 'saved') { el.panelTitle.textContent = 'Bookmarks and highlights'; buildSaved(); }
+  else if (kind === 'search') { el.panelTitle.textContent = 'Search'; buildSearch(); }
   else buildSettings();
   closePop(true); el.scrim.classList.remove('clear');
   el.panel.classList.add('open'); el.scrim.classList.add('open'); el.panel.setAttribute('aria-hidden', 'false'); setNav('settings'); pushSheet();
@@ -1387,7 +1538,7 @@ function closePanel(fromPop) {
   scrimCheck();
   setNav(el.rail.classList.contains('open') ? 'library' : 'reader'); if (fromPop !== true) popSheet();
 }
-function openRail() { closePop(true); el.scrim.classList.remove('clear'); closePanel(true); el.rail.classList.add('open'); el.scrim.classList.add('open'); setNav('library'); pushSheet(); }
+function openRail() { renderContinue(); renderDay(); closePop(true); el.scrim.classList.remove('clear'); closePanel(true); el.rail.classList.add('open'); el.scrim.classList.add('open'); setNav('library'); pushSheet(); }
 function seg(id, opts, cur) { return '<div class="seg" id="' + id + '" role="group">' + opts.map(function (o) { return '<button type="button" data-v="' + o[0] + '" aria-pressed="' + (String(cur) === String(o[0])) + '">' + o[1] + '</button>'; }).join('') + '</div>'; }
 function voiceOptions(kind, cur) {
   var list = voiceList(kind);
@@ -1438,7 +1589,13 @@ function buildSettings() {
   h += '<div class="group"><h3>Reading</h3>' +
     '<div class="row"><span class="lab">Old-font repair</span>' + seg('segRepair', [['auto', 'Auto'], ['on', 'Always'], ['off', 'Never']], S.repair) + '<span class="hint">Many Hindi books (Gita Press, for example) use pre-Unicode fonts that extract as symbols. Repair turns them into real Devanagari before speaking. Applies when you open a PDF.</span></div>' +
     '<div class="row"><label for="fsz">Text size <span class="val" id="fszV">' + S.font.toFixed(2) + ' rem</span></label><input type="range" id="fsz" min="1" max="2.4" step="0.05" value="' + S.font + '"></div></div>';
-  h += '<div class="group"><h3>Shortcuts</h3><div class="row hint">Space play or pause · ← → previous or next line · PageUp PageDown change page · [ ] speed</div></div>';
+  var wk = []; for (var q = 6; q >= 0; q--) { var dd = new Date(); dd.setDate(dd.getDate() - q); wk.push([dd, dayInfo(dd)]); }
+  var mx = Math.max(10, Math.max.apply(null, wk.map(function (x) { return x[1].mins; })));
+  h += '<div class="group"><h3>Reading stats</h3><div class="statrow"><div><b>' + dayInfo().pages + '</b><small>pages today</small></div><div><b>' + dayInfo().mins + '</b><small>minutes today</small></div><div><b>' + streakDays() + '</b><small>day streak</small></div></div>' +
+    '<div class="mini" role="img" aria-label="Minutes listened in the last 7 days">' + wk.map(function (x) { return '<span><i style="height:' + Math.round(x[1].mins / mx * 100) + '%"></i></span>'; }).join('') + '</div><div class="minil">' + wk.map(function (x) { return '<span>' + 'SMTWTFS'[x[0].getDay()] + '</span>'; }).join('') + '</div></div>';
+  h += '<div class="group"><h3>Pronunciation fixes</h3><span class="hint">If a word is read wrongly, write it as it appears and how it should sound. Example: Sri → Shri.</span><div class="pron"><input id="prA" placeholder="Written as" aria-label="Written as"><input id="prB" placeholder="Say it as" aria-label="Say it as"><button type="button" class="btn" id="prAdd">Add</button></div><div id="prList"></div></div>';
+  h += '<div class="group"><h3>Storage and data</h3><div class="row hint" id="stoInfo">Checking…</div><div class="btn-row"><button type="button" class="btn" id="clrData">Clear bookmarks, stats and history</button></div></div>';
+  h += '<div class="group"><h3>Shortcuts</h3><div class="row hint">Space play or pause · ← → previous or next line · PageUp PageDown change page · [ ] speed · B bookmark · H highlight</div></div>';
   el.panelBody.innerHTML = h;
   function showEng() { S.engine = S.engine || 'browser'; $('#engBrowser').style.display = S.engine === 'browser' ? '' : 'none'; $('#engPack').style.display = S.engine === 'pack' ? '' : 'none'; $('#engGoogle').style.display = S.engine === 'google' ? '' : 'none'; if (S.engine === 'pack') initPackUI(); }
   showEng();
@@ -1461,6 +1618,13 @@ function buildSettings() {
   $('#rate').oninput = function (e) { S.rate = +e.target.value; $('#rateV').textContent = S.rate.toFixed(2) + '×'; save('rate'); syncRate(); };
   $('#gap').oninput = function (e) { S.gap = +e.target.value; $('#gapV').textContent = S.gap + ' ms'; save('gap'); };
   $('#fsz').oninput = function (e) { S.font = +e.target.value; $('#fszV').textContent = S.font.toFixed(2) + ' rem'; save('font'); applyFont(); };
+  function prList() { $('#prList').innerHTML = PRON.map(function (r, n) { return '<div class="item"><span class="tx"><b>' + esc(r[0]) + ' → ' + esc(r[1]) + '</b></span><button type="button" class="rm" data-pr="' + n + '" aria-label="Remove">✕</button></div>'; }).join(''); }
+  async function applyPronNow() { var was = P.playing; if (was) pause(); cache.clear(); if (DOC) await showPage(P.page, P.idx); if (was) play(); }
+  prList();
+  $('#prAdd').onclick = function () { var a = $('#prA').value.trim(), b = $('#prB').value.trim(); if (!a || !b) return toast('Fill both boxes.'); PRON.push([a, b]); store.set('pron', PRON); $('#prA').value = ''; $('#prB').value = ''; prList(); applyPronNow(); toast('Saved.', 1500); };
+  $('#prList').onclick = function (e) { var r = e.target.closest('[data-pr]'); if (!r) return; PRON.splice(+r.dataset.pr, 1); store.set('pron', PRON); prList(); applyPronNow(); };
+  (async function () { var t = ''; try { var est = await navigator.storage.estimate(); t = 'This app uses about ' + Math.round((est.usage || 0) / 1048576) + ' MB on this device (voices, offline files and your reading data).'; } catch (e) { t = 'Storage information is not available in this browser.'; } var n = $('#stoInfo'); if (n) n.textContent = t; })();
+  $('#clrData').onclick = function () { if (!confirm('Clear all bookmarks, highlights, reading stats and the reading history? Downloaded voices are kept.')) return; saved = []; ST = { days: {} }; store.set('saved', saved); store.set('stats', ST); try { localStorage.removeItem('vachak.last'); Object.keys(localStorage).forEach(function (k) { if (k.indexOf('vachak.pos.') === 0) localStorage.removeItem(k); }); } catch (e) {} renderSavedCount(); renderDay(); renderContinue(); applyHl(); updateBm(); buildSettings(); toast('Cleared.'); };
   $('#testV').onclick = async function () {
     var was = P.playing; if (was) pause();
     var t = ++P.token; stopAudio();
@@ -1500,7 +1664,19 @@ function closeRail(fromPop) { el.rail.classList.remove('open'); scrimCheck(); se
 el.openBtn.onclick = function () { el.fileInput.click(); };
 el.fileInput.onchange = function () { var f = el.fileInput.files[0]; if (f) { openPdf(f); closeRail(); } el.fileInput.value = ''; };
 el.libGita.onclick = function () { openGita(); closeRail(); };
-el.libStoriesSub.textContent = (window.STORIES || []).length + ' stories · Hindi, English';
+renderDay(); renderSavedCount(); renderContinue();
+(function () {
+  var sv = slokaOfDay(), c = sv[0], v = sv[1], txt = v[1].filter(function (l) { return !/उवाच\s*$/.test(l); }).join(' ').replace(/।।\s*\d+\.\d+(?:-\d+\.\d+)?\s*।।/g, '।।');
+  var d = document.createElement('div'); d.innerHTML = '<p class="sec-label">Sloka of the day</p><div class="cardx"><div class="v" lang="sa">' + esc(txt) + '</div><div class="doc-meta">Bhagavad Gita ' + c.n + '.' + v[0] + '</div><button type="button" class="btn" id="slokaGo">Listen</button></div>';
+  var tw = document.querySelector('.toc-wrap'); tw.parentNode.insertBefore(d, tw);
+  document.getElementById('slokaGo').onclick = function () { gotoVerse(c.n, v[0]); };
+})();
+(function () { var a = window.STORIES || [], c = { story: 0, spiritual: 0 }, L = {}; a.forEach(function (b) { c[b.cat || 'story']++; if ((b.cat || 'story') === 'story') L[b.lang] = 1; }); el.libStoriesSub.textContent = c.story + ' stories · ' + Object.keys(L).map(function (l) { return LNAME[l] || l; }).join(', '); el.libSpiritualSub.textContent = c.spiritual + ' texts · Hanuman Chalisa, mantras, aartis'; })();
+el.libSpiritual.onclick = function () { closeRail(true); openPanel('spiritual'); };
+el.libSaved.onclick = function () { closeRail(true); openPanel('saved'); };
+el.libSearch.onclick = function () { closeRail(true); openPanel('search'); };
+el.srchBtn.onclick = function () { openPanel('search'); };
+el.bmBtn.onclick = function () { toggleSaved(0); };
 el.libStories.onclick = function () { closeRail(true); openPanel('stories'); };
 el.libPaste.onclick = function () { closeRail(true); openPanel('paste'); };
 function applyRail() {
@@ -1588,6 +1764,7 @@ async function buildPop() {
   }
   h += '<div class="grp"><p class="grp-t">Voice</p><div role="radiogroup" aria-label="Voice">' + rows + '</div></div>' + packRows;
   h += '<div class="grp"><p class="grp-t">Speed</p>' + seg('segRate', [[0.7, '0.7×'], [0.8, '0.8×'], [0.9, '0.9×'], [1, '1×'], [1.1, '1.1×'], [1.25, '1.25×'], [1.5, '1.5×']], closestRate(S.rate)) + '</div>';
+  h += '<div class="grp"><p class="grp-t">Sleep timer · ' + esc(sleepLabel()) + '</p>' + seg('segSleep', [['0', 'Off'], ['15', '15 min'], ['30', '30 min'], ['45', '45 min'], ['60', '1 hour'], ['page', 'End of page']], SL.end ? 'x' : SL.page ? 'page' : '0') + '</div>';
   h += '<div class="grp"><label class="toggle"><input type="checkbox" id="popAuto"' + (S.auto ? ' checked' : '') + '>Continue to the next page automatically</label></div>';
   h += '<div class="foot"><button type="button" class="btn" id="popTest">Play a sample</button><button type="button" class="btn quiet" id="popMore">Manage voices in Settings</button></div>';
   el.popBody.innerHTML = h;
@@ -1607,6 +1784,7 @@ el.popBody.addEventListener('click', async function (e) {
   var b = e.target.closest('button'); if (!b) return;
   if (b.id === 'popTest') { sampleVoice(); return; }
   if (b.id === 'popMore') { closePop(); openPanel('settings'); return; }
+  var sl = b.closest('#segSleep'); if (sl) { setSleep(b.dataset.v); buildPop(); return; }
   var r = b.closest('#segRate'); if (r) { el.rateSel.value = String(closestRate(+b.dataset.v)); el.rateSel.dispatchEvent(new Event('change')); Array.prototype.forEach.call(r.children, function (x) { x.setAttribute('aria-pressed', x === b); }); return; }
   var act = b.dataset.act; if (!act) return;
   if (act === 'browser' || act === 'google') { S.engine = act; save('engine'); checkVoiceQuality(); renderBadge(); buildPop(); if (P.playing) { var i = P.idx; P.token++; P.playing = false; stopAudio(); P.idx = i; play(); } return; }
@@ -1631,6 +1809,14 @@ el.toc.addEventListener('click', function (e) {
   if (b.dataset.p) { jump(+b.dataset.p, 0, true); closeRail(); } else if (b.dataset.o) gotoOutline(+b.dataset.o);
 });
 function playFrom(i) { var was = P.playing; P.token++; P.playing = false; stopAudio(); P.idx = i; markCurrent(); play(); }
+(function () {
+  var t = 0, sx = 0, sy = 0, span = null, fired = false;
+  el.textView.addEventListener('pointerdown', function (e) { var s = e.target.closest('.u'); if (!s || s.classList.contains('silent')) return; span = s; fired = false; sx = e.clientX; sy = e.clientY; clearTimeout(t); t = setTimeout(function () { fired = true; toggleSaved(1, +s.dataset.i); if (navigator.vibrate) try { navigator.vibrate(15); } catch (x) {} }, 550); }, { passive: true });
+  el.textView.addEventListener('pointermove', function (e) { if (Math.abs(e.clientX - sx) + Math.abs(e.clientY - sy) > 10) clearTimeout(t); }, { passive: true });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (n) { el.textView.addEventListener(n, function () { clearTimeout(t); }, { passive: true }); });
+  el.textView.addEventListener('contextmenu', function (e) { if (e.target.closest('.u')) e.preventDefault(); });
+  el.textView.addEventListener('click', function (e) { if (fired) { fired = false; e.stopImmediatePropagation(); e.preventDefault(); } }, true);
+})();
 el.textView.addEventListener('click', function (e) { var s = e.target.closest('.u'); if (!s || s.classList.contains('silent')) return; playFrom(+s.dataset.i); });
 el.pageView.addEventListener('click', function (e) {
   var d = e.target.closest('.ov'); if (!d) return;
@@ -1652,6 +1838,8 @@ window.addEventListener('keydown', function (e) {
   if (e.key === 'Escape') { closePanel(); closeRail(); return; }
   if (e.key === ' ' && tag !== 'button') { e.preventDefault(); P.playing ? pause() : play(); }
   else if (e.key === 'ArrowRight') { e.preventDefault(); step(1); } else if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
+  else if ((e.key === 'h' || e.key === 'H') && tag !== 'input' && tag !== 'textarea') { toggleSaved(1); }
+  else if ((e.key === 'b' || e.key === 'B') && tag !== 'input' && tag !== 'textarea') { toggleSaved(0); }
   else if (e.key === 'PageDown') { e.preventDefault(); jump(P.page + 1, 0); } else if (e.key === 'PageUp') { e.preventDefault(); jump(P.page - 1, 0); }
   else if (e.key === ']' || e.key === '[') { var a = [0.7, 0.8, 0.9, 1, 1.1, 1.25, 1.5], i = a.indexOf(closestRate(S.rate)) + (e.key === ']' ? 1 : -1); S.rate = a[Math.max(0, Math.min(a.length - 1, i))]; save('rate'); syncRate(); toast('Speed ' + S.rate + '×', 1200); if (P.playing) { var k = P.idx; P.token++; P.playing = false; stopAudio(); P.idx = k; play(); } }
 });
@@ -1663,6 +1851,91 @@ if ('mediaSession' in navigator) {
     navigator.mediaSession.setActionHandler('play', play); navigator.mediaSession.setActionHandler('pause', pause);
     navigator.mediaSession.setActionHandler('previoustrack', function () { step(-1); }); navigator.mediaSession.setActionHandler('nexttrack', function () { step(1); });
   } catch (e) {}
+}
+
+
+/* ---------- saved lines ---------- */
+async function openSaved(x) {
+  closePanel();
+  if (!DOC || DOC.key !== x.k) {
+    if (x.k === 'gita') await openGita(x.p);
+    else if (x.k.indexOf('book:') === 0) await openBook(x.k.slice(5), x.p);
+    else { toast('Open "' + x.d + '" again to jump to this line.', 4500); return; }
+  }
+  jump(x.p, x.i, true);
+}
+function buildSaved() {
+  var h = '<div class="group"><span class="hint">Tap the bookmark button to save the line being read. Press and hold any line (or press H on a keyboard) to highlight it.</span>';
+  if (!saved.length) h += '<div class="card"><div class="doc-meta">Nothing saved yet.</div></div>';
+  var list = saved.map(function (x, n) { return [x, n]; }).reverse();
+  list.forEach(function (r) {
+    var x = r[0]; h += '<div class="item" data-n="' + r[1] + '"><button type="button" class="tx" style="all:unset;flex:1;min-width:0;display:grid;gap:2px;cursor:pointer" data-go="' + r[1] + '"><b>' + esc(x.t) + '</b><small>' + (x.h ? 'Highlight' : 'Bookmark') + ' · ' + esc(x.d) + ' · ' + (x.kind === 'gita' ? 'Chapter ' : 'Page ') + x.p + '</small></button><button type="button" class="rm" data-rm="' + r[1] + '" aria-label="Remove">✕</button></div>';
+  });
+  el.panelBody.innerHTML = h + '</div>';
+  el.panelBody.onclick = function (e) {
+    var g = e.target.closest('[data-go]'), rm = e.target.closest('[data-rm]');
+    if (g) openSaved(saved[+g.dataset.go]); else if (rm) { saved.splice(+rm.dataset.rm, 1); saveSaved(); applyHl(); updateBm(); buildSaved(); }
+  };
+}
+
+/* ---------- search ---------- */
+var srchTok = 0;
+function normQ(t) { return String(t).toLowerCase(); }
+function snippet(t, q) {
+  var lt = normQ(t), k = lt.indexOf(q); if (k < 0) return esc(t.slice(0, 120));
+  var a = Math.max(0, k - 40), b = Math.min(t.length, k + q.length + 70);
+  return (a ? '…' : '') + esc(t.slice(a, k)) + '<mark>' + esc(t.slice(k, k + q.length)) + '</mark>' + esc(t.slice(k + q.length, b)) + (b < t.length ? '…' : '');
+}
+function buildSearch() {
+  var what = DOC ? DOC.title : 'nothing open';
+  el.panelBody.innerHTML = '<div class="group"><div class="srch"><input type="search" id="srchQ" placeholder="Search in ' + esc(what) + '" aria-label="Search" autocomplete="off" lang="hi"><button type="button" class="btn primary" id="srchGo">Search</button></div><div id="srchOut" aria-live="polite"></div></div>';
+  var run = function () { doSearch($('#srchQ').value); };
+  $('#srchGo').onclick = run; $('#srchQ').onkeydown = function (e) { if (e.key === 'Enter') run(); };
+  if (!DOC) $('#srchOut').innerHTML = '<div class="doc-meta">Open a book, the Gita or a PDF first.</div>';
+  setTimeout(function () { var q = $('#srchQ'); if (q && !narrow.matches) q.focus(); }, 60);
+}
+async function doSearch(raw) {
+  var q = normQ(raw).trim(), out = $('#srchOut'); if (!DOC || q.length < 2) { out.innerHTML = '<div class="doc-meta">Type at least two letters.</div>'; return; }
+  var tok = ++srchTok, hits = [], MAX = 60;
+  function add(p, t) { hits.push([p, t]); }
+  function paint(note) {
+    out.innerHTML = (note ? '<div class="doc-meta" style="margin-bottom:8px">' + note + '</div>' : '') + hits.map(function (x, n) { return '<button type="button" class="item" data-hit="' + n + '"><span class="tx"><b>' + snippet(x[1], q) + '</b><small>' + (DOC.kind === 'gita' ? 'Chapter ' : 'Page ') + x[0] + '</small></span></button>'; }).join('');
+  }
+  if (DOC.kind === 'gita') {
+    window.GITA.forEach(function (c) { c.v.forEach(function (v) { if (hits.length >= MAX) return; var t = v[1].join(' ').replace(/।।\s*\d+\.\d+(?:-\d+\.\d+)?\s*।।/g, '').replace(/\s+/g, ' ').trim(); if (normQ(t).indexOf(q) >= 0) add(c.n, t); }); });
+  } else if (DOC.kind === 'book') {
+    DOC.book.pg.forEach(function (pg, i) { pg.forEach(function (p) { if (hits.length < MAX && normQ(p).indexOf(q) >= 0) add(i + 1, p); }); });
+  } else if (DOC.kind === 'text') {
+    spans.forEach(function (sp) { if (hits.length < MAX && normQ(sp.textContent).indexOf(q) >= 0) add(1, sp.textContent); });
+  } else {
+    var n = DOC.pages, doc = DOC;
+    for (var pg = 1; pg <= n && hits.length < MAX; pg++) {
+      if (tok !== srchTok || doc !== DOC) return;
+      if (pg % 5 === 1) { out.firstChild && 0; paint('Searching… page ' + pg + ' of ' + n + ' · <button type="button" class="btn" id="srchStop">Stop</button>'); var sb = $('#srchStop'); if (sb) sb.onclick = function () { srchTok++; paint('Stopped.'); }; await new Promise(function (r) { setTimeout(r, 0); }); }
+      try { var m = await getModel(pg); m.units.forEach(function (u) { if (hits.length < MAX && normQ(u.text).indexOf(q) >= 0) add(pg, u.text); }); } catch (e) {}
+    }
+    if (tok !== srchTok) return;
+  }
+  paint(hits.length ? (hits.length >= MAX ? 'Showing the first ' + MAX + ' matches.' : hits.length + ' match' + (hits.length === 1 ? '' : 'es') + '.') : 'No matches.');
+  out.onclick = async function (e) {
+    var b = e.target.closest('[data-hit]'); if (!b) return; var h = hits[+b.dataset.hit]; closePanel();
+    await showPage(h[0], 0); var m = P.model, idx = 0;
+    for (var i = 0; i < m.units.length; i++) if (normQ(m.units[i].text).indexOf(q) >= 0) { idx = i; break; }
+    P.idx = idx; markCurrent(); savePos();
+  };
+}
+
+/* ---------- sloka of the day ---------- */
+function slokaOfDay() {
+  var list = []; window.GITA.forEach(function (c) { c.v.forEach(function (v) { list.push([c, v]); }); });
+  var d = new Date(), doy = Math.floor((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - new Date(d.getFullYear(), 0, 0)) / 864e5);
+  return list[(doy * 7 + d.getFullYear()) % list.length];
+}
+async function gotoVerse(ch, no) {
+  await openGita(ch); var m = P.model, idx = -1;
+  for (var i = 0; i < m.units.length; i++) if (m.units[i].no === no) { idx = i; break; }
+  if (idx >= 0) { P.idx = idx; markCurrent(); }
+  closeRail(); play();
 }
 
 /* ---------- boot ---------- */

@@ -2,7 +2,7 @@
    - App files are cached on install and refreshed in the background.
    - Voice files (voices/, vendor/piper/) are cached by the app itself in "vachak-voices-v1";
      this worker only serves them from there when present, so nothing is stored twice. */
-const VERSION = 'v1';
+const VERSION = 'v9';
 const SHELL = 'vachak-shell-' + VERSION;
 const PRECACHE = [
   './', 'index.html', 'manifest.webmanifest',
