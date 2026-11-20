@@ -35,6 +35,7 @@ svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-widt
   *::-webkit-scrollbar-thumb:hover, *::-webkit-scrollbar-thumb:active { background: var(--accent-fg); background-clip: content-box; }
 }
 @supports (-moz-appearance: none) { * { scrollbar-width: thin; scrollbar-color: var(--sb-thumb-h) transparent; } }
+.rail-resize { display: none; }
 :root { --sb-thumb: color-mix(in srgb, var(--ink) 22%, transparent); --sb-thumb-h: color-mix(in srgb, var(--ink) 42%, transparent); }
 .app { height: 100%; display: grid; grid-template-columns: 276px minmax(0, 1fr); gap: 20px; }
 
@@ -205,7 +206,13 @@ body.dragging .sheet { outline: 2px dashed var(--accent); outline-offset: -8px; 
 .menu-btn { display: inline-grid; }
 .btn.primary:hover, .play:hover { filter: brightness(1.06); }
 @media (min-width: 861px) {
-  .app { transition: grid-template-columns .24s ease, gap .24s ease; }
+  .app { position: relative; grid-template-columns: var(--rail-w, 276px) minmax(0, 1fr); transition: grid-template-columns .24s ease, gap .24s ease; }
+  .app.resizing { transition: none; user-select: none; cursor: col-resize; }
+  .rail-resize { display: block; position: absolute; top: 12px; bottom: 12px; left: calc(var(--rail-w, 276px) + 2px); width: 16px; cursor: col-resize; z-index: 5; touch-action: none; }
+  .rail-resize::after { content: ""; position: absolute; left: 7px; top: 32%; bottom: 32%; width: 2px; border-radius: 2px; background: transparent; transition: background .15s; }
+  .rail-resize:hover::after, .rail-resize:focus-visible::after, .rail-resize.drag::after { background: var(--accent-fg); }
+  .rail-resize:focus-visible { outline: none; }
+  .app[data-rail="collapsed"] .rail-resize { display: none; }
   .app[data-rail="collapsed"] { grid-template-columns: 0 minmax(0, 1fr); gap: 0; }
   .app[data-rail="collapsed"] .rail { visibility: hidden; opacity: 0; overflow: hidden; pointer-events: none; padding: 0; }
   .rail { transition: opacity .18s ease, visibility 0s; }
@@ -273,6 +280,8 @@ body.dragging .sheet { outline: 2px dashed var(--accent); outline-offset: -8px; 
 :root[data-platform="windows"] .rail { background: color-mix(in srgb, var(--panel) 72%, transparent); border: 1px solid var(--line); border-radius: 8px; padding: 12px 10px 0; }
 :root[data-platform="windows"] .toc button, :root[data-platform="windows"] .lib button { border-radius: 4px; position: relative; }
 :root[data-platform="windows"] .toc button:hover, :root[data-platform="windows"] .lib button:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); border-color: transparent; }
+:root[data-platform="windows"] .toc button[aria-current="true"]::before { content: ""; position: absolute; left: 0; top: 24%; bottom: 24%; width: 3px; border-radius: 3px; background: var(--accent-fg); }
+:root[data-platform="windows"] .lib button:focus-visible, :root[data-platform="windows"] .toc button:focus-visible { outline-offset: -2px; }
 :root[data-platform="windows"] .toc button[aria-current="true"] { background: color-mix(in srgb, var(--ink) 8%, transparent); color: var(--ink); }
 :root[data-platform="windows"] .toc button[aria-current="true"]::before { content: ""; position: absolute; left: 0; top: 22%; bottom: 22%; width: 3px; border-radius: 2px; background: var(--accent); }
 :root[data-platform="windows"] .sheet { border-radius: 8px; box-shadow: 0 1.5px 4px rgba(0,0,0,.10), 0 0 0 1px var(--line); }
@@ -512,6 +521,7 @@ html, body { overscroll-behavior: none; }
     </div>
     </div>
   </aside>
+  <div class="rail-resize" id="railResize" role="separator" aria-orientation="vertical" aria-label="Resize library (double-click to reset)" tabindex="0"></div>
 
   <main class="main">
     <div class="topbar">
@@ -1869,6 +1879,34 @@ window.addEventListener('keydown', function (e) {
   else if ((e.key === 'b' || e.key === 'B') && tag !== 'input' && tag !== 'textarea') { toggleSaved(0); }
   else if (e.key === 'PageDown') { e.preventDefault(); jump(P.page + 1, 0); } else if (e.key === 'PageUp') { e.preventDefault(); jump(P.page - 1, 0); }
   else if (e.key === ']' || e.key === '[') { var a = [0.7, 0.8, 0.9, 1, 1.1, 1.25, 1.5], i = a.indexOf(closestRate(S.rate)) + (e.key === ']' ? 1 : -1); S.rate = a[Math.max(0, Math.min(a.length - 1, i))]; save('rate'); syncRate(); toast('Speed ' + S.rate + '×', 1200); if (P.playing) { var k = P.idx; P.token++; P.playing = false; stopAudio(); P.idx = k; play(); } }
+});
+/* ---------- desktop extras: resizable library, remembered scroll, shortcuts ---------- */
+(function () {
+  var h = document.getElementById('railResize'), MIN = 220, MAX = 460, DEF = 276, w = +store.get('railW', DEF) || DEF;
+  function set(v) { w = Math.max(MIN, Math.min(MAX, Math.round(v))); el.app.style.setProperty('--rail-w', w + 'px'); h.setAttribute('aria-valuenow', String(w)); }
+  set(w); h.setAttribute('aria-valuemin', String(MIN)); h.setAttribute('aria-valuemax', String(MAX));
+  h.onpointerdown = function (e) {
+    e.preventDefault(); try { h.setPointerCapture(e.pointerId); } catch (x) {}
+    var x0 = e.clientX, w0 = w; h.classList.add('drag'); el.app.classList.add('resizing');
+    h.onpointermove = function (ev) { set(w0 + ev.clientX - x0); };
+    h.onpointerup = h.onpointercancel = function () { h.classList.remove('drag'); el.app.classList.remove('resizing'); h.onpointermove = h.onpointerup = h.onpointercancel = null; store.set('railW', w); fitAllMq(); };
+  };
+  h.ondblclick = function () { set(DEF); store.set('railW', DEF); fitAllMq(); };
+  h.onkeydown = function (e) { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); set(w + (e.key === 'ArrowRight' ? 16 : -16)); store.set('railW', w); fitAllMq(); } };
+})();
+(function () {
+  var rs = document.getElementById('railScroll'), t, touched = false, y = +store.get('railY', 0) || 0;
+  function restore() { if (!touched && y && rs.scrollHeight > rs.clientHeight) rs.scrollTop = y; }
+  setTimeout(restore, 0); setTimeout(restore, 800);
+  rs.addEventListener('wheel', function () { touched = true; }, { passive: true }); rs.addEventListener('pointerdown', function () { touched = true; }, { passive: true });
+  rs.addEventListener('scroll', function () { clearTimeout(t); t = setTimeout(function () { store.set('railY', rs.scrollTop); }, 250); }, { passive: true });
+})();
+window.addEventListener('keydown', function (e) {
+  var tag = (e.target.tagName || '').toLowerCase(), typing = tag === 'input' || tag === 'textarea' || tag === 'select', mac = document.documentElement.getAttribute('data-platform') === 'mac';
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && (e.key === 'f' || e.key === 'F')) { e.preventDefault(); openPanel('search'); return; }
+  if (typing || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === 'm' || e.key === 'M') { e.preventDefault(); el.menuBtn.click(); }
+  else if (e.key === '?') { toast('Space play/pause · ← → line · PageUp/PageDown page · [ ] speed · H highlight · B bookmark · M library · ' + (mac ? '⌘' : 'Ctrl') + '+F search', 7000); }
 });
 window.addEventListener('beforeunload', savePos);
 window.addEventListener('resize', (function () { var t; return function () { clearTimeout(t); t = setTimeout(function () { if (P.view === 'page') renderPageView(); }, 250); }; })());
