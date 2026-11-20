@@ -15,14 +15,14 @@ P = {
                                     dict(bg='#0C0C0E',panel='#141416',sheet='#1B1B1E',ink='#EEEEF0',ink2='#B9B9C0',ink3='#9A9AA3',line='#2C2C31',accent='#F3B845',accent2='#E09A1A',aink='#1A1203',soft='#3A2F12',mark='#644A0C',mink='#FFF3D0')),
  'spasht': ('Spasht', 'High contrast',   dict(bg='#FFFFFF',panel='#FFFFFF',sheet='#FFFFFF',ink='#000000',ink2='#1A1A1A',ink3='#333333',line='#000000',accent='#0020C8',accent2='#0020C8',aink='#FFFFFF',soft='#E3E8FF',mark='#FFE500',mink='#000000'),
                                     dict(bg='#000000',panel='#000000',sheet='#000000',ink='#FFFFFF',ink2='#F0F0F0',ink3='#DADADA',line='#FFFFFF',accent='#FFE500',accent2='#FFE500',aink='#000000',soft='#2A2600',mark='#FFE500',mink='#000000')),
- 'kakao':  ('Cocoa',  'Cocoa, cream and sky', dict(bg='#EFE4CF',panel='#F6EEDD',sheet='#FFFBF1',ink='#2E1B12',ink2='#5A4133',ink3='#6C5343',line='#DACBB0',accent='#6B3F26',accent2='#8A5535',aink='#FFFFFF',soft='#D8E8F3',mark='#A9D3EE',mink='#14202B'),
-                                    dict(bg='#150E0A',panel='#1E1510',sheet='#271B15',ink='#F3E8D6',ink2='#CDBBA4',ink3='#AE9A84',line='#3D2B21',accent='#E2C7A3',accent2='#C79A6B',aink='#24160E',soft='#243645',mark='#27557A',mink='#F4FAFF')),
- 'jau':    ('Oat',    'Oat, slate and tomato', dict(bg='#E7E2D6',panel='#F2EEE5',sheet='#FBF9F4',ink='#1F2A3A',ink2='#475468',ink3='#586578',line='#D5CEBF',accent='#B83219',accent2='#D9462A',aink='#FFFFFF',soft='#FBE4DD',mark='#F7BCAA',mink='#2A1410'),
-                                    dict(bg='#0F1621',panel='#161F2D',sheet='#1C2738',ink='#EEF1F6',ink2='#B7C0CF',ink3='#97A2B5',line='#2B374B',accent='#FF8466',accent2='#F25B3A',aink='#2A0C05',soft='#3B2622',mark='#8A3320',mink='#FFEDE7')),
- 'ranga':  ('Racing', 'Racing green and gold', dict(bg='#E5E3D8',panel='#F1EFE6',sheet='#FBFAF4',ink='#101A14',ink2='#3F4C43',ink3='#525F58',line='#D2CFBE',accent='#0B4D36',accent2='#146B4B',aink='#F7E9B8',soft='#E9E3C6',mark='#E8D59B',mink='#1A1405'),
-                                    dict(bg='#0B0C0B',panel='#131413',sheet='#1A1B1A',ink='#ECE9DD',ink2='#B9B6A6',ink3='#9A9788',line='#2B2C2A',accent='#D8BE7E',accent2='#C2A25A',aink='#17120A',soft='#1E3A2D',mark='#1B5640',mink='#FBF6E4')),
- 'tamra':  ('Tamra',  'Pearl and copper', dict(bg='#E6E5E8',panel='#F1F0F3',sheet='#FBFAFC',ink='#1B1F2A',ink2='#454B5C',ink3='#585E70',line='#D2D1D8',accent='#9A4A1E',accent2='#B8622E',aink='#FFFFFF',soft='#F3E1D4',mark='#F2C7A6',mink='#2A1608'),
-                                    dict(bg='#0A1118',panel='#101A24',sheet='#16222F',ink='#E9EEF4',ink2='#B3BFCC',ink3='#93A1B1',line='#25344A',accent='#EDA878',accent2='#D98A54',aink='#2A1407',soft='#3A2A20',mark='#733E16',mink='#FFF3E8')),
+ 'kakao':  ('Cocoa',  'Vanilla, cocoa and sky', dict(bg='#F1E7D0',panel='#F7EFDC',sheet='#FBF5E6',ink='#3B2418',ink2='#614536',ink3='#745948',line='#DDCFB2',accent='#8DC2E6',accent2='#7AB4DB',aink='#2B1A10',afg='#245F8A',soft='#D9E9F4',mark='#B7DAF1',mink='#2B1A10'),
+                                    dict(bg='#22150E',panel='#2B1C13',sheet='#271910',ink='#F3E9D2',ink2='#D3C3A8',ink3='#B3A187',line='#43301F',accent='#8DC2E6',accent2='#7AB4DB',aink='#1D120C',afg='#8DC2E6',soft='#27394A',mark='#285578',mink='#F4FAFF')),
+ 'jau':    ('Oat',    'Oat, slate and tomato', dict(bg='#F6F2E9',panel='#FAF7F0',sheet='#FDFBF7',ink='#243449',ink2='#4A5A70',ink3='#5B6A7F',line='#DAD3C4',accent='#C8351B',accent2='#B52E16',aink='#FFFFFF',afg='#B52E16',soft='#F8DDD5',mark='#F5B7A5',mink='#2A1410'),
+                                    dict(bg='#18222F',panel='#1F2B3B',sheet='#1B2634',ink='#F2EDE0',ink2='#BFC6D2',ink3='#9CA6B6',line='#33425A',accent='#FF6A4D',accent2='#F25B3A',aink='#1A0A06',afg='#FF8C73',soft='#3E2A2B',mark='#8F3523',mink='#FFF1EC')),
+ 'ranga':  ('Racing', 'Champagne, black and green', dict(bg='#EFE7D0',panel='#F6F0DD',sheet='#FAF6E8',ink='#121413',ink2='#3E433F',ink3='#555A54',line='#DCD3B6',accent='#0F4A36',accent2='#0A3A29',aink='#F3E7BC',afg='#0F4A36',soft='#DDE5D3',mark='#E7D79F',mink='#121413'),
+                                    dict(bg='#0C2B21',panel='#113628',sheet='#0F3125',ink='#F1E9CC',ink2='#CFC8A8',ink3='#A9B39A',line='#1F4A39',accent='#D8BE7E',accent2='#C4A85F',aink='#0D0F0E',afg='#D8BE7E',soft='#1B4434',mark='#5E4E1D',mink='#FFF8E0')),
+ 'tamra':  ('Tamra',  'Pearl, charcoal and copper', dict(bg='#EDEBEE',panel='#F4F3F5',sheet='#F9F8FA',ink='#1D212B',ink2='#464C5B',ink3='#5A6070',line='#D8D6DC',accent='#AC5B2A',accent2='#9A4A1E',aink='#FFFFFF',afg='#9A4A1E',soft='#F3E0D3',mark='#F2C7A6',mink='#2A1608'),
+                                    dict(bg='#10161E',panel='#171F29',sheet='#141B24',ink='#EAEEF3',ink2='#B6C0CC',ink3='#95A2B2',line='#27323F',accent='#E39A66',accent2='#D98A54',aink='#1F1007',afg='#EDA878',soft='#352A22',mark='#7A4519',mink='#FFF1E4')),
 }
 def lum(h):
     h=h.lstrip('#'); r,g,b=[int(h[i:i+2],16)/255 for i in (0,2,4)]
@@ -30,7 +30,9 @@ def lum(h):
     return 0.2126*f(r)+0.7152*f(g)+0.0722*f(b)
 def cr(a,b):
     x,y=lum(a),lum(b); x,y=max(x,y),min(x,y); return (x+0.05)/(y+0.05)
-checks=[('ink','bg',7),('ink','sheet',7),('ink2','sheet',4.5),('ink2','panel',4.5),('ink2','bg',4.5),('ink3','sheet',4.5),('ink3','panel',4.5),('ink3','bg',4.5),('aink','accent',4.5),('accent','sheet',4.5),('accent','soft',4.5),('mink','mark',7),('accent','panel',4.5),('ink2','soft',4.5)]
+for _k,(_n,_d,_l,_dk) in P.items():
+    _l.setdefault('afg',_l['accent']); _dk.setdefault('afg',_dk['accent'])
+checks=[('ink','bg',7),('ink','sheet',7),('ink2','sheet',4.5),('ink2','panel',4.5),('ink2','bg',4.5),('ink3','sheet',4.5),('ink3','panel',4.5),('ink3','bg',4.5),('aink','accent',4.5),('afg','sheet',4.5),('afg','soft',4.5),('mink','mark',7),('afg','panel',4.5),('ink2','soft',4.5)]
 bad=0
 for k,(n,d,l,dk) in P.items():
     for mode,t in (('light',l),('dark',dk)):
@@ -38,7 +40,7 @@ for k,(n,d,l,dk) in P.items():
             r=cr(t[a],t[b])
             if r<need: bad+=1; print('LOW',k,mode,a,'on',b,round(r,2),'need',need)
 print('contrast problems:',bad)
-names={'bg':'bg','panel':'panel','sheet':'sheet','ink':'ink','ink2':'ink-2','ink3':'ink-3','line':'line','accent':'accent','accent2':'accent-2','aink':'accent-ink','soft':'accent-soft','mark':'mark','mink':'mark-ink'}
+names={'bg':'bg','panel':'panel','sheet':'sheet','ink':'ink','ink2':'ink-2','ink3':'ink-3','line':'line','accent':'accent','accent2':'accent-2','afg':'accent-fg','aink':'accent-ink','soft':'accent-soft','mark':'mark','mink':'mark-ink'}
 def block(t): return ';'.join('--%s:%s'%(names[k],v) for k,v in t.items())
 css=[]
 first=list(P)[0]

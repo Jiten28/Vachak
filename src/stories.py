@@ -168,6 +168,25 @@ book('en-golden-egg', 'en', 'The Goose and the Golden Eggs', 'A fable', [
   'The couple sat in silence. Their greed had cost them the one thing that had made them rich.',
   'Moral: be patient and grateful for what you have. Greed can destroy the very thing that brings you good fortune.'])])
 
+for _f in ('stories_long.py','stories_night.py'):
+    exec(compile(open(os.path.join(os.path.dirname(os.path.abspath(__file__)),_f),encoding='utf-8').read(),_f,'exec'))
+
+def paginate(b, target=150, cap=210):
+    paras=[p for c in b['ch'] for p in c['p']]
+    pages=[];cur=[];w=0
+    for p in paras:
+        n=len(p.split())
+        if cur and (w>=target or w+n>cap) :
+            pages.append(cur);cur=[];w=0
+        cur.append(p);w+=n
+    if cur:
+        if pages and w<60: pages[-1]+=cur
+        else: pages.append(cur)
+    return pages
+for b in B:
+    b['pg']=paginate(b)
+    b['w']=sum(len(p.split()) for pg in b['pg'] for p in pg)
+    del b['ch']
 out = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'stories.json')
 json.dump(B, open(out, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
-print(len(B), 'books,', sum(len(' '.join(' '.join(c['p']) for c in b['ch']).split()) for b in B), 'words')
+print(len(B),'books'); [print(b['id'],b['w'],'words',len(b['pg']),'pages') for b in B]
