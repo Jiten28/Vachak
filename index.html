@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval' 'sha256-ZP6xc3GXpm2M+f5PkEEAv6ST1J66cnIsNtpGCh2M3CM=' 'sha256-sgjVgYxt3aT8n5krqAnjY6CWTZga11jhb+KqZZq8EmI=' 'sha256-9w5fzIUuIyzu59YFI8+LpyKIUCpJGxKC5nJrpLyAzHY=' 'sha256-TL8rXb7vDIXgojtBFemg1K8v73CYf4ewtqv7lbzS5hI=' 'sha256-DiAWAccCkFlHeg0LV3zbtljgTUDWmVtV3clIbtdn/kA='; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self' blob: data: https://huggingface.co https://*.huggingface.co https://*.hf.co https://texttospeech.googleapis.com; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval' 'sha256-ZP6xc3GXpm2M+f5PkEEAv6ST1J66cnIsNtpGCh2M3CM=' 'sha256-sgjVgYxt3aT8n5krqAnjY6CWTZga11jhb+KqZZq8EmI=' 'sha256-9w5fzIUuIyzu59YFI8+LpyKIUCpJGxKC5nJrpLyAzHY=' 'sha256-TL8rXb7vDIXgojtBFemg1K8v73CYf4ewtqv7lbzS5hI=' 'sha256-0AIRkVOaTA3Yuk09LjvLtBtGVptIYNjCfVyWNma0q7g='; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self' blob: data: https://huggingface.co https://*.huggingface.co https://*.hf.co https://texttospeech.googleapis.com; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Vachak Reader</title>
@@ -166,7 +166,8 @@ body.dragging .sheet { outline: 2px dashed var(--accent); outline-offset: -8px; 
 .verse { display: grid; grid-template-columns: 3.1rem minmax(0, 1fr); gap: 4px 6px; padding: 8px 0; border-top: 1px solid var(--line); }
 .verse:first-of-type { border-top: 0; }
 .verse .no { font-family: var(--f-ui); font-variant-numeric: tabular-nums; font-size: .78rem; font-weight: 700; color: var(--ink-3); padding-top: .85em; }
-.verse .tx { line-height: 1.95; white-space: pre-line; }
+.verse .tx { line-height: 1.95; white-space: pre-line; overflow-wrap: break-word; min-width: 0; }
+#textView, #textView p, #textView h3 { overflow-wrap: break-word; }
 .notice { max-width: 34rem; margin: 40px auto; text-align: center; color: var(--ink-2); font-family: var(--f-ui); }
 .notice h3 { margin: 0 0 6px; font-size: 1.1rem; color: var(--ink); }
 .page-wrap { position: relative; margin: 0 auto; width: max-content; max-width: 100%; box-shadow: 0 0 0 1px var(--line), var(--shadow); background: #fff; }
@@ -2014,8 +2015,11 @@ window.addEventListener('keydown', function (e) {
 /* ---------- desktop extras: resizable library, remembered scroll, shortcuts ---------- */
 (function () {
   var h = document.getElementById('railResize'), MIN = 220, MAX = 460, DEF = 276, w = +store.get('railW', DEF) || DEF;
-  function set(v) { w = Math.max(MIN, Math.min(MAX, Math.round(v))); el.app.style.setProperty('--rail-w', w + 'px'); h.setAttribute('aria-valuenow', String(w)); }
-  set(w); h.setAttribute('aria-valuemin', String(MIN)); h.setAttribute('aria-valuemax', String(MAX));
+  /* the reader always keeps at least 560px, so a wide sidebar can never squeeze the text */
+  function cap() { return Math.max(MIN, Math.min(MAX, window.innerWidth - 560)); }
+  function paint() { var e = Math.min(w, cap()); el.app.style.setProperty('--rail-w', e + 'px'); h.setAttribute('aria-valuenow', String(e)); }
+  function set(v) { w = Math.max(MIN, Math.min(cap(), Math.round(v))); paint(); }
+  window.addEventListener('resize', paint); w = Math.max(MIN, Math.min(MAX, w)); paint(); h.setAttribute('aria-valuemin', String(MIN)); h.setAttribute('aria-valuemax', String(MAX));
   h.onpointerdown = function (e) {
     e.preventDefault(); try { h.setPointerCapture(e.pointerId); } catch (x) {}
     var x0 = e.clientX, w0 = w; h.classList.add('drag'); el.app.classList.add('resizing');
